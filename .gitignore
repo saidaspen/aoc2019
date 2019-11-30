@@ -24,3 +24,6 @@ hs_err_pid*
 dist/
 .idea/
 *.iml
+input/
+out/
+
