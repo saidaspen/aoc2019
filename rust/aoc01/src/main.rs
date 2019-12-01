@@ -22,11 +22,10 @@ fn main() {
 }
 
 fn fuel_req_for(val: f32) -> i32 {
-    let fuel_req = (val / 3.0).floor() as i32 - 2;
-    if fuel_req < 1 {
-        return 0;
+    match (val / 3.0).floor() as i32 - 2 {
+        i if i < 1 => 0,
+        i => i + fuel_req_for(i as f32),
     }
-    return fuel_req + fuel_req_for(fuel_req as f32);
 }
 
 #[test]
