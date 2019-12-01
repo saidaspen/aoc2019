@@ -9,7 +9,7 @@ endif
 default: build
 
 build:
-	find . -name "*.java" -print0 | xargs -0 javac -g -d dist
-	cp src/aoc.sh dist/
-	chmod u+x dist/aoc.sh
+	@find . -name "*.java" -print0 | xargs -0 javac -g -d dist
+	@cp src/aoc.sh dist/
+	@chmod u+x dist/aoc.sh
 
