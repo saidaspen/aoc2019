@@ -12,7 +12,7 @@ $ make
 ```
 
 From there, either run it yourself or use the shell-script provided. Here is an example running the puzzle or day 1 (Aoc01)
-with the inputs taken from file ```/User/saidaspen/aoc2019/inputs/aoc01.txt```
+with the inputs taken from file ```/inputs/aoc01.txt```
 
 ```
 $ dist/aoc.sh Aoc01 <input file>
