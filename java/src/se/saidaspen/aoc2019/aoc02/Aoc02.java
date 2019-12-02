@@ -1,4 +1,4 @@
-package se.saidaspen.aoc2019.aoc01;
+package se.saidaspen.aoc2019.aoc02;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
