@@ -4,135 +4,96 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 import static java.nio.file.Files.lines;
 import static java.util.stream.Collectors.toList;
 
 /**
- * This is the attempted soltuion to Advent of Code 2019 day 3
+ * This is the attempted solution to Advent of Code 2019 day 3
  * Problem can be found here:
  * https://adventofcode.com/2019/day/3
  */
 public class Aoc03 {
-
-    public static final Point ORIGO = new Point(0, 0);
     // This specifies if we are running part 1 or part 2 of the problem
     private static boolean IS_PART1 = false;
-    private List<String> lines;
-
-    public Aoc03(List<String> lines) {
-        this.lines = lines;
-    }
+    private static final Point ORIGIN = new Point(0, 0);
 
     public static void main(String[] args) throws IOException {
-        List<String> lines = lines(Paths.get(args[0])).collect(toList());
-        Aoc03 app = new Aoc03(lines);
+        List<List<Point>> wires = lines(Paths.get(args[0])).collect(toList()).stream()
+                .map(l -> l.split(","))
+                .map(Aoc03::toCoordinates)
+                .collect(toList());
         if (IS_PART1 == true) {
-            Optional<Integer> closestCrossing = app.findClosestCrossing();
-            if (closestCrossing.isPresent()) {
-                System.out.println(closestCrossing.get());
-            } else {
-                System.out.println("No crossings found");
-            }
+            findClosestCrossing(wires.get(0), wires.get(1)).ifPresent(System.out::println);
         } else {
-            
+            findShortestWireLength(wires.get(0), wires.get(1)).ifPresent(System.out::println);
         }
     }
 
-    public Optional<Integer> findClosestCrossing() {
-        List<List<Point>> wires = lines.stream().map(l -> l.split(",")).map(Aoc03::toCoordinates).collect(toList());
-        List<Point> crossings = findCrossings(wires.get(0), wires.get(1));
-        List<Integer> distances = crossings.stream().filter(p -> !p.equals(ORIGO)).map(l -> manhattanDistanceBetween(ORIGO, l)).collect(toList());
-        return distances.stream().min(Integer::compareTo);
+    public static Optional<Integer> findClosestCrossing(List<Point> wire1, List<Point> wire2) {
+        return findCrossings(wire1, wire2)
+                .stream().filter(p -> !p.equals(ORIGIN))
+                .map(ORIGIN::manhattanDistanceTo)
+                .collect(toList())
+                .stream()
+                .min(Integer::compareTo);
     }
 
-    private static Integer manhattanDistanceBetween(Point from, Point to) {
-        return Math.abs(from.x - to.x) + Math.abs(from.y - to.y);
+    public static Optional<Integer> findShortestWireLength(List<Point> wire1, List<Point> wire2) {
+        return findCrossings(wire1, wire2)
+                .stream()
+                .map(x -> wireLengthTo(wire1, x) + wireLengthTo(wire2, x))
+                .min(Integer::compareTo);
     }
 
-    public static List<Point> findCrossings(List<Point> pointsA, List<Point> pointsB) {
+    private static int wireLengthTo(List<Point> wire, Point x) {
+        int length = 0;
+        for (int i = 0; i < wire.size() - 1; i++) {
+            if (!x.isOnLine(wire.get(i), wire.get(i + 1))) {
+                length += wire.get(i).manhattanDistanceTo(wire.get(i + 1));
+            } else {
+                length += wire.get(i).manhattanDistanceTo(x);
+                break;
+            }
+        }
+        return length;
+    }
+
+    private static List<Point> findCrossings(List<Point> wire1, List<Point> wire2) {
         List<Point> crossings = new ArrayList<>();
-        for (int i = 0; i < pointsA.size() - 1; i++) {
-            for (int j = 0; j < pointsB.size() - 1; j++) {
-                Optional<Point> cross = crosses(pointsB.get(j), pointsB.get(j + 1), pointsA.get(i), pointsA.get(i + 1));
-                cross.ifPresent(crossings::add);
+        for (int i = 0; i < wire1.size() - 1; i++) {
+            for (int j = 0; j < wire2.size() - 1; j++) {
+                crosses(wire2.get(j), wire2.get(j + 1), wire1.get(i), wire1.get(i + 1)).ifPresent(crossings::add);
             }
         }
         return crossings;
     }
 
-    public static Optional<Point> crosses(Point a, Point b, Point c, Point d) {
-        Integer crossX = null;
-        if (a.x == b.x) { // X compare
-            if (((c.y <= a.y && c.y >= b.y) || (c.y >= a.y && c.y <= b.y)) &&
-            ((c.x <= a.x && d.x >= a.x) || (c.x >= a.x && d.x <= a.x))){
-                return Optional.of(new Point(a.x, c.y));
-            }
-        } else { // y compare
-            if (((c.x <= a.x && c.x >= b.x) || (c.x >= a.x && c.x <= b.x)) &&
-            ((c.y <= a.y && d.y >= b.y) || (c.y >= a.y && d.y <= b.y)) ){
-                return Optional.of(new Point(c.x, a.y));
-            }
-        }
-        return Optional.empty();
+    private static Optional<Point> crosses(Point a, Point b, Point c, Point d) {
+        Point candidate = (a.x == b.x) ? new Point(a.x, c.y) : new Point(c.x, a.y);
+        return candidate.isOnLine(c, d) && candidate.isOnLine(a, b) ? Optional.of(candidate) : Optional.empty();
     }
 
-    private static boolean isOnLine(Point c, Point d, Point crossing) {
-        return (crossing.x <= d.x && crossing.x >= c.x
-                && crossing.y >= c.y && crossing.y <= d.y);
-    }
-
-    private static List<Point> toCoordinates(String[] wire) {
+    public static List<Point> toCoordinates(String[] wire) {
+        Point currentPoint = ORIGIN;
         List<Point> points = new ArrayList<>();
-        Point currentPoint = ORIGO;
         points.add(currentPoint);
         for (String instr : wire) {
-            char direction = instr.charAt(0);
-            int magnitude = Integer.parseInt(instr.substring(1));
-            if (direction == 'D') {
-                currentPoint = new Point(currentPoint.x, currentPoint.y - magnitude);
-            } else if (direction == 'R') {
-                currentPoint = new Point(currentPoint.x + magnitude, currentPoint.y);
-            } else if (direction == 'U') {
-                currentPoint = new Point(currentPoint.x, currentPoint.y + magnitude);
-            } else if (direction == 'L') {
-                currentPoint = new Point(currentPoint.x - magnitude, currentPoint.y);
+            char dir = instr.charAt(0);
+            int steps = Integer.parseInt(instr.substring(1));
+            if (dir == 'D') {
+                currentPoint = new Point(currentPoint.x, currentPoint.y - steps);
+            } else if (dir == 'R') {
+                currentPoint = new Point(currentPoint.x + steps, currentPoint.y);
+            } else if (dir == 'U') {
+                currentPoint = new Point(currentPoint.x, currentPoint.y + steps);
+            } else if (dir == 'L') {
+                currentPoint = new Point(currentPoint.x - steps, currentPoint.y);
             }
             points.add(currentPoint);
         }
         return points;
     }
 
-    public static class Point {
-        int x, y;
-
-        @Override
-        public String toString() {
-            return "Point{" +
-                    "x=" + x +
-                    ", y=" + y +
-                    '}';
-        }
-
-        public Point(int x, int y) {
-            this.x = x;
-            this.y = y;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            Point point = (Point) o;
-            return x == point.x &&
-                    y == point.y;
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(x, y);
-        }
-    }
 }
