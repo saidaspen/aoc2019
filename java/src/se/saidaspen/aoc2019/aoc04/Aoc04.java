@@ -4,12 +4,8 @@ import java.io.IOException;
 import java.util.stream.IntStream;
 
 public class Aoc04 {
-
-    private static final int START_RANGE = 137683;
-    private static final int END_RANGE = 596253;
-
     public static void main(String[] args) throws IOException {
-        System.out.println(IntStream.range(START_RANGE, END_RANGE).filter(Aoc04::meetCriteria).count());
+        System.out.println(IntStream.range(137683, 596253).filter(Aoc04::meetCriteria).count());
     }
 
     public static boolean meetCriteria(int val) {
