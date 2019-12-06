@@ -7,6 +7,18 @@ import java.util.*;
 import static java.nio.file.Files.lines;
 import static java.util.stream.Collectors.toMap;
 
+/*
+    Poem posted to https://www.reddit.com/r/adventofcode
+
+    Round and round and round we go
+    even Santa gets dizzy in his chapeau
+    lost in space, no way home?
+    I guess, for now, we must roam.
+    Look at the map, it must be right
+    A christmas without Santa, imagine the sight
+    Map is ready! Space-time is curved
+    here we come, our circles cannot be disturbed!
+ */
 public class Aoc06 {
 
     private final Map<String, String> orbits;
