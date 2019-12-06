@@ -7,15 +7,17 @@ fn main() {
         Ok(val) => val,
         Err(_) => panic!("Unable to read input."),
     };
-    let mut codes: Vec<i32> = input
+    let codes: Vec<i32> = input
         .split(',')
         .map(|s| s.trim())
         .map(|s| s.parse::<i32>().unwrap())
         .collect();
-    run_program(&mut codes);
+
+    run_program(&codes);
 }
 
-fn run_program(input: &mut Vec<i32>) {
+fn run_program(input2: &[i32]) {
+    let mut input = input2.to_vec();
     let mut pc = 0;
     loop {
         let cmd = format!("{:0>5}", input[pc].to_string());
@@ -24,54 +26,38 @@ fn run_program(input: &mut Vec<i32>) {
             return;
         } else if op_code == "03" {
             let pos = input[pc + 1] as usize;
-            input[pos] = 5; // This is special input given in the problem.
-            pc += 2;
+            input[pos] = 1;
+            pc += 2; // This is speial input
             continue;
         } else if op_code == "04" {
             let pos = input[pc + 1] as usize;
-            println!("{}", input[pos]);
+            println!("{}", input[pos as usize]);
             pc += 2;
             continue;
         }
-        let param1 = match cmd.chars().nth(2).unwrap() {
-            '1' => input[pc + 1],
-            '0' => input[input[pc + 1] as usize],
-            v => panic!("Unexpected mode {}", v),
+        let param1 = match cmd.chars().nth(3).unwrap() {
+            '0' => input[pc + 1],
+            '1' => input[input[pc + 1] as usize],
+            _ => panic!("Unexpected mode"),
         };
-        let param2 = match cmd.chars().nth(1).unwrap() {
-            '1' => input[pc + 2],
-            '0' => input[input[pc + 2] as usize],
+        let param2 = match cmd.chars().nth(2).unwrap() {
+            '0' => input[pc + 2],
+            '1' => input[input[pc + 2] as usize],
             _ => panic!("Unexpected mode"),
         };
         let store_pos = input[pc + 3] as usize;
+        println!(
+            "param1={}, param2={}, store_pos={}",
+            param1, param2, store_pos
+        );
         match op_code {
             "99" => return,
             "01" => {
-                input[store_pos] = param1 + param2;
+                input[store_pos] = input[param1 as usize] + input[param2 as usize];
                 pc += 4;
             }
             "02" => {
-                input[store_pos] = param1 * param2;
-                pc += 4;
-            }
-            "05" if param1 > 0 => pc = param2 as usize,
-            "05" => pc += 3,
-            "06" if param1 == 0 => pc = param2 as usize,
-            "06" => pc += 3,
-            "07" if param1 < param2 => {
-                input[store_pos] = 1;
-                pc += 4;
-            }
-            "07" => {
-                input[store_pos] = 0;
-                pc += 4;
-            }
-            "08" if param1 == param2 => {
-                input[store_pos] = 1;
-                pc += 4;
-            }
-            "08" => {
-                input[store_pos] = 0;
+                input[store_pos] = input[param1 as usize] * input[param2 as usize];
                 pc += 4;
             }
             code => panic!("Unsupported code {}", code),
