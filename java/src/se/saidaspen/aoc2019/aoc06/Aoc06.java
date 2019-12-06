@@ -16,8 +16,7 @@ public class Aoc06 {
     }
 
     public static void main(String[] args) throws IOException {
-        new Aoc06(lines(Paths.get(args[0])).map(l -> l.split("\\)")).collect(toMap(l -> l[1], l -> l[0])))
-                .run();
+        new Aoc06(lines(Paths.get(args[0])).map(l -> l.split("\\)")).collect(toMap(l -> l[1], l -> l[0]))).run();
     }
 
     private void run() {
