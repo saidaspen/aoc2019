@@ -13,6 +13,22 @@ import static java.util.Collections.swap;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.LongStream.range;
 
+/**
+ * Solution to Advent of Code 2019 Day 7
+ *
+ * Here is the accompanying poem:
+ *
+ * Fuel it up, if ye may,
+ * Rocket equation was essential.
+ * Navigation was cleared yesterday,
+ * Amplification is now exponential.
+ *
+ * Turn it up and loop it back,
+ * get that thrust to amplify
+ * a trick, a hack — let's call it that
+ * tonight we are off – tonight we fly
+ *
+ */
 public class Aoc07 {
 
     private static final long PHASE_MIN = 5L;
