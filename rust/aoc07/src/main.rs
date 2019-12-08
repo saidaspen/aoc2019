@@ -16,7 +16,8 @@ fn main() {
         Ok(val) => val,
         Err(_) => panic!("Unable to read input."),
     };
-    run_part1(input);
+    println!("PART1: {}", run_part1(input.clone()));
+    println!("PART2: {}", run_part2(input.clone()));
 }
 
 fn run_part1(input: String) -> i32 {
@@ -31,7 +32,7 @@ fn run_part1(input: String) -> i32 {
     let mut largest = 0;
     // Each phase needs to be unique
     for phase in [0, 1, 2, 3, 4].iter().cloned().permutations(5) {
-        let output = get_output(&phase, &codes, false).expect("Expected output");
+        let output = get_output(&phase, &codes, false);
         largest = cmp::max(largest, output);
     }
     largest
@@ -49,13 +50,13 @@ fn run_part2(input: String) -> i32 {
     let mut largest = 0;
     // Each phase needs to be unique
     for phase in [5, 6, 7, 8, 9].iter().cloned().permutations(5) {
-        let output = get_output(&phase, &codes, true).expect("Expected output");
+        let output = get_output(&phase, &codes, true);
         largest = cmp::max(largest, output);
     }
     largest
 }
 
-fn get_output(phase: &Vec<i32>, pcode: &Vec<i32>, feedback: bool) -> Option<i32> {
+fn get_output(phase: &Vec<i32>, pcode: &Vec<i32>, feedback: bool) -> i32 {
     let amp_a = Processor {
         code: pcode.clone(),
         pc: 0,
@@ -97,33 +98,34 @@ fn get_output(phase: &Vec<i32>, pcode: &Vec<i32>, feedback: bool) -> Option<i32>
     }
     // Given input
     amps[0].input.push(0);
+    let mut to_thrust: i32 = 0;
     loop {
         let mut all_stopped = true;
-        for i in 0..amps.len() {
+        let num_amps = amps.len();
+        for i in 0..num_amps {
             if amps[i].is_runnable() {
                 all_stopped = false;
-                println!("Running Amp {}", i);
                 amps[i].run();
-                let from_amp = &amps[i];
-                if i == amps.len() - 1 && feedback {
-                    let mut outs = from_amp.output.clone();
+                if i == (num_amps - 1) {
+                    let mut outs = amps[i].drain_out();
                     while !outs.is_empty() {
-                        amps[0].input.push(outs.remove(0));
+                        let val = outs.remove(0);
+                        to_thrust = val;
+                        if feedback {
+                            amps[0].input.push(val);
+                        }
                     }
-                } else if i < amps.len() - 1 {
-                    let mut outs = from_amp.output.clone();
+                } else if i < num_amps - 1 {
+                    let mut outs = amps[i].drain_out();
                     while !outs.is_empty() {
-                        amps[i + 1].input.push(outs.remove(0));
+                        let val = outs.remove(0);
+                        amps[i + 1].input.push(val);
                     }
                 }
             }
         }
         if all_stopped {
-            println!("--------------------------------------------------");
-            let o = amps.last()?.output.clone().pop();
-            println!("Input: {:?}, Output: {}", phase, o.expect("ee"));
-            println!("--------------------------------------------------");
-            return o;
+            return to_thrust;
         }
     }
 }
@@ -143,24 +145,26 @@ impl Processor {
             || (!self.input.is_empty() && self.status == Status::Waiting)
     }
 
+    fn drain_out(&mut self) -> Vec<i32> {
+        let val = self.output.clone();
+        self.output.clear();
+        return val;
+    }
+
     fn run(&mut self) {
         loop {
             let cmd = format!("{:0>5}", self.code[self.pc].to_string());
             let op_code = &cmd[3..];
             if op_code == "99" {
-                println!("Halted");
                 self.status = Status::Halted;
                 return;
             } else if op_code == "03" {
-                print!("Reading input..");
                 let pos = self.code[self.pc + 1] as usize;
                 if self.input.is_empty() {
-                    print!("input not found, Waiting\n");
                     self.status = Status::Waiting;
                     return;
                 }
                 let in_val = self.input.remove(0);
-                print!("input {} found!\n", in_val);
                 self.code[pos] = in_val;
                 self.status = Status::Runnable;
                 self.pc += 2;
@@ -168,7 +172,6 @@ impl Processor {
             } else if op_code == "04" {
                 let pos = self.code[self.pc + 1] as usize;
                 let out_val = self.code[pos as usize];
-                println!("Sending output {}", out_val);
                 self.output.push(out_val);
                 self.pc += 2;
                 continue;

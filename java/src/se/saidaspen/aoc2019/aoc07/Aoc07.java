@@ -31,9 +31,9 @@ import static java.util.stream.LongStream.range;
  */
 public class Aoc07 {
 
-    private static final long PHASE_MIN = 5L;
-    private static final long PHASE_MAX = 9L;
-    private static final boolean USE_FEEDBACK = true;
+    private static final long PHASE_MIN = 0L;
+    private static final long PHASE_MAX = 4L;
+    private static final boolean USE_FEEDBACK = false;
 
     public static void main(String[] args) throws IOException {
         Long[] code = Arrays.stream(new String(Files.readAllBytes(Paths.get(args[0]))).split(","))
@@ -59,7 +59,7 @@ public class Aoc07 {
         return permutations;
     }
 
-    private static Long findLargestThrust(Long[] code, List<Long> phases) {
+    public static Long findLargestThrust(Long[] code, List<Long> phases) {
         try {
             ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(5);
             List<BlockingQueue<Long>> wires = IntStream.range(0, phases.size() + 1)
@@ -100,11 +100,14 @@ public class Aoc07 {
                     String cmd = String.format("%05d", code[pc]);
                     int opCode = Integer.parseInt(cmd.substring(3));
                     if (opCode == /*INPUT*/ 3) {
-                        code[code[pc + 1].intValue()] = in.poll(10L, TimeUnit.DAYS);
+                        Long inputVal = in.poll(10L, TimeUnit.DAYS);
+                        System.out.println("Got input: " + inputVal);
+                        code[code[pc + 1].intValue()] = inputVal;
                         pc += 2;
                         continue;
                     } else if (opCode == /*OUTPUT*/ 4) {
                         long outVal = code[code[pc + 1].intValue()];
+                        System.out.println("Sending output: " + outVal);
                         out.put(outVal);
                         pc += 2;
                         continue;
