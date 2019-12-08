@@ -47,8 +47,8 @@ where ```<input file>```is the input for that particular day.
 * Day 11
 * Day 10
 * Day 9
-* Day 8
-* [Day 7: Amplification Circuit](https://adventofcode.com/2019/day/7) - Solutions: [Java](https://github.com/saidaspen/aoc2019/blob/master/java/src/se/saidaspen/aoc2019/aoc07/Aoc07.java), Rust
+* [Day 8: Day 8: Space Image Format](https://adventofcode.com/2019/day/8) - Solutions: [Java](https://github.com/saidaspen/aoc2019/blob/master/java/src/se/saidaspen/aoc2019/aoc08/Aoc08.java), Rust
+* [Day 7: Amplification Circuit](https://adventofcode.com/2019/day/7) - Solutions: [Java](https://github.com/saidaspen/aoc2019/blob/master/java/src/se/saidaspen/aoc2019/aoc07/Aoc07.java), [Rust](https://github.com/saidaspen/aoc2019/blob/master/rust/aoc07/src/main.rs)
 * [Day 6: Universal Orbit Map](https://adventofcode.com/2019/day/6) - Solutions: [Java](https://github.com/saidaspen/aoc2019/blob/master/java/src/se/saidaspen/aoc2019/aoc06/Aoc06.java), [Rust](https://github.com/saidaspen/aoc2019/blob/master/rust/aoc06/src/main.rs)
 * [Day 5: Sunny with a Chance of Asteroids](https://adventofcode.com/2019/day/5) - Solutions: [Java](https://github.com/saidaspen/aoc2019/blob/master/java/src/se/saidaspen/aoc2019/aoc05/Aoc05.java), [Rust](https://github.com/saidaspen/aoc2019/blob/master/rust/aoc05/src/main.rs)
 * [Day 4: Secure Container](https://adventofcode.com/2019/day/4) - Solutions: [Java](https://github.com/saidaspen/aoc2019/blob/master/java/src/se/saidaspen/aoc2019/aoc04/Aoc04.java), [Rust](https://github.com/saidaspen/aoc2019/blob/master/rust/aoc04/src/main.rs)
