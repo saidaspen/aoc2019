@@ -6,23 +6,27 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.lang.Integer.parseInt;
+
 public class Aoc08 {
+
+    private static final int TRANSPARENT = 2;
 
     public static void main(String[] args) throws IOException {
         String input = new String(Files.readAllBytes(Paths.get(args[0])));
         new Aoc08().run(input, 25, 6);
     }
 
-    void run(String input, int width, int height) {
-        char[] a = input.toCharArray();
+    private void run(String input, int width, int height) {
+        char[] chars = input.toCharArray();
         List<List<Integer>> layers = new ArrayList<>();
         int pixelsPerLayer = width * height;
-        for (int i = 0; i < a.length / pixelsPerLayer; i++) {
+        for (int i = 0; i < chars.length / pixelsPerLayer; i++) {
             List<Integer> layer = new ArrayList<>();
             int layerStart = i * pixelsPerLayer;
             int layerEnd = layerStart + pixelsPerLayer;
             for (int j = layerStart; j < layerEnd; j++) {
-                layer.add(Integer.parseInt(Character.toString(a[j])));
+                layer.add(parseInt(Character.toString(chars[j])));
             }
             layers.add(layer);
         }
@@ -56,9 +60,9 @@ public class Aoc08 {
     }
 
     private static String getPixel(List<List<Integer>> layers, int row, int col, int width) {
-        int output = 2; // start transparent
+        int output = TRANSPARENT; // start transparent
         for (List<Integer> layer : layers) {
-            output = output == 2 ? layer.get(row * width + col) : output;
+            output = output == TRANSPARENT ? layer.get(row * width + col) : output;
         }
         return (output == 1) ? " # " : "   ";
     }
