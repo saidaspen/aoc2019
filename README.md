@@ -28,6 +28,8 @@ $ cargo run --release < <input file>
 ```
 where ```<input file>```is the input for that particular day.
 
+Some days there is no direct input to the puzzle, or the input is a number or two. For some of these days the input is actually hard coded directly in the source. 
+
 ## The programming challenges
 * Day 25 
 * Day 24
@@ -55,3 +57,22 @@ where ```<input file>```is the input for that particular day.
 * [Day 3: Crossed Wires](https://adventofcode.com/2019/day/3) - Solutions: [Java](https://github.com/saidaspen/aoc2019/blob/master/java/src/se/saidaspen/aoc2019/aoc03/Aoc03.java), [Rust](https://github.com/saidaspen/aoc2019/blob/master/rust/aoc03/src/main.rs)
 * [Day 2: 1202 Program Alarm](https://adventofcode.com/2019/day/2) - Solutions: [Java](https://github.com/saidaspen/aoc2019/blob/master/java/src/se/saidaspen/aoc2019/aoc02/Aoc02.java), [Rust](https://github.com/saidaspen/aoc2019/blob/master/rust/aoc02/src/main.rs)
 * [Day 1: The Tyranny of the Rocket Equation](https://adventofcode.com/2019/day/1) - Solutions: [Java](https://github.com/saidaspen/aoc2019/blob/master/java/src/se/saidaspen/aoc2019/aoc01/Aoc01.java), [Rust](https://github.com/saidaspen/aoc2019/blob/master/rust/aoc01/src/main.rs) 
+
+
+## The poems
+On the Advent of Code Reddit page there is a daily thread where people show off not only their solutions but also poems.
+Here are the poems I entered in the Advent of Code 2019 Reddit Megathreads.
+
+### Day 8
+
+    It’s digital now
+
+    There's no password managers in space,
+    You have to memorise them all;
+    Or take a picture, just in case,
+    To help, when time comes to recall.
+    Oh no, I forgot the code again,
+    Time to load the picture up;
+    Render it, layer by layer, then;
+    It’s digital now, new way to develop
+
