@@ -5,15 +5,14 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-@SuppressWarnings("WeakerAccess")
 public final class IntComputer implements Runnable {
 
     private final Map<Integer, Long> memory;
     private final BlockingQueue<Long> in, out;
     private final int[] pAddrs = new int[3];
 
-    private int pc = 0;
-    private Long rbo = 0L;
+    private int pc = 0;     // Program Counter
+    private Long rbo = 0L;  // Relative Base Offset
 
     public IntComputer(Long[] code, BlockingQueue<Long> in, BlockingQueue<Long> out) {
         memory = new HashMap<>(code.length);
@@ -29,9 +28,9 @@ public final class IntComputer implements Runnable {
             while(load(pc) != /*HALT*/ 99){
                 var cmd = String.format("%05d", load(pc));
                 var opCode = Integer.parseInt(cmd.substring(3));
-                pAddrs[0] = getParam(cmd, 1);
-                pAddrs[1] = getParam(cmd, 2);
-                pAddrs[2] = getParam(cmd, 3);
+                pAddrs[0] = getParam(cmd, 1); // Param 1
+                pAddrs[1] = getParam(cmd, 2); // Param 2
+                pAddrs[2] = getParam(cmd, 3); // Param 3
                 if (opCode == /*INPUT*/ 3) {
                     store(pAddrs[0], in.poll(10L, TimeUnit.DAYS));
                     pc += 2;
