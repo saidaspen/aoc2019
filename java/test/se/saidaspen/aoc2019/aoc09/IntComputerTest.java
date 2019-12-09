@@ -66,7 +66,6 @@ public class IntComputerTest {
         ArrayBlockingQueue<Long> in = new ArrayBlockingQueue<>(1000);
         ArrayBlockingQueue<Long> out = new ArrayBlockingQueue<>(1000);
         IntComputer cpu = new IntComputer(code, in, out);
-        cpu.setDebugLog(true);
         cpu.run();
         assertTrue(109 == out.poll(1, TimeUnit.DAYS));
         assertTrue(1 == out.poll(1, TimeUnit.DAYS));

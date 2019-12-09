@@ -13,10 +13,10 @@ public class Aoc09 {
                 .mapToLong(Long::parseLong)
                 .boxed()
                 .toArray(Long[]::new);
-        new Aoc09().run(code, 2L); // 2 for Part 2, 1 for Part 1
+        new Aoc09().run(code, 1L); // 2 for Part 2, 1 for Part 1
     }
 
-    private void run(Long[] code, long i) throws InterruptedException {
+    private void run(Long[] code, Long i) throws InterruptedException {
         ArrayBlockingQueue<Long> in = new ArrayBlockingQueue<>(10000);
         ArrayBlockingQueue<Long> out = new ArrayBlockingQueue<>(10000);
         in.put(i);

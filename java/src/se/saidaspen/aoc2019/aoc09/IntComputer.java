@@ -6,13 +6,14 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 @SuppressWarnings("WeakerAccess")
-public class IntComputer implements Runnable {
+public final class IntComputer implements Runnable {
+
     private final Map<Integer, Long> memory;
-    private final BlockingQueue<Long> in;
-    private final BlockingQueue<Long> out;
-    private boolean debugLog = false;
+    private final BlockingQueue<Long> in, out;
+    private final int[] pAddrs = new int[3];
+
     private int pc = 0;
-    private Long relativeBaseOffset = 0L;
+    private Long rbo = 0L;
 
     public IntComputer(Long[] code, BlockingQueue<Long> in, BlockingQueue<Long> out) {
         memory = new HashMap<>(code.length);
@@ -23,151 +24,55 @@ public class IntComputer implements Runnable {
         this.out = out;
     }
 
-    private enum ParamMode {
-        POSITION(0),
-        IMMEDIATE(1),
-        RELATIVE(2);
-        int val;
-
-        ParamMode(int i) {
-            this.val = i;
-        }
-    }
-
-    private enum Command {
-        ADD(1),
-        MULT(2),
-        INPUT(3),
-        OUTPUT(4),
-        JMP_IF_TRUE(5),
-        JMP_IF_FALSE(6),
-        LESS_THAN(7),
-        EQUAL(9),
-        ADJUST_RBO(9),
-        HALT(99);
-        private final int val;
-
-        Command(int i) {
-            this.val = i;
-        }
-
-        public static Command valueOf(int val) {
-            switch (val) {
-                case 1:
-                    return ADD;
-                case 2:
-                    return MULT;
-                case 3:
-                    return INPUT;
-                case 4:
-                    return OUTPUT;
-                case 5:
-                    return JMP_IF_TRUE;
-                case 6:
-                    return JMP_IF_FALSE;
-                case 7:
-                    return LESS_THAN;
-                case 8:
-                    return EQUAL;
-                case 9:
-                    return ADJUST_RBO;
-                case 99:
-                    return HALT;
-                default:
-                    throw new RuntimeException("Unsupported command with code: " + val);
-            }
-        }
-    }
-
-    private static class Parameter {
-        private final ParamMode mode;
-        private final int addr;
-        private final Map<Integer, Long> memory;
-
-        Parameter(ParamMode mode, int addr, Map<Integer, Long> memory) {
-            this.mode = mode;
-            this.addr = addr;
-            this.memory = memory;
-        }
-
-        @Override
-        public String toString() {
-            return "Parameter{mode=" + mode + ", addr=" + addr + '}';
-        }
-
-        public Long get() {
-            return memory.computeIfAbsent(addr, (x) -> 0L);
-        }
-    }
-
     public void run() {
         try {
-            do {
-                String cmd = String.format("%05d", load(pc));
-                Command opCode = Command.valueOf(Integer.parseInt(cmd.substring(3)));
-                Parameter param1 = getParam(cmd, 1);
-                Parameter param2 = getParam(cmd, 2);
-                Parameter param3 = getParam(cmd, 3);
-                printCommand(cmd, param1, param2, param3, relativeBaseOffset, opCode);
-                if (opCode == Command.INPUT) {
-                    store(param1.addr, in.poll(10L, TimeUnit.DAYS));
+            while(load(pc) != /*HALT*/ 99){
+                var cmd = String.format("%05d", load(pc));
+                var opCode = Integer.parseInt(cmd.substring(3));
+                pAddrs[0] = getParam(cmd, 1);
+                pAddrs[1] = getParam(cmd, 2);
+                pAddrs[2] = getParam(cmd, 3);
+                if (opCode == /*INPUT*/ 3) {
+                    store(pAddrs[0], in.poll(10L, TimeUnit.DAYS));
                     pc += 2;
-                } else if (opCode == Command.OUTPUT) {
-                    out.put(param1.get());
+                } else if (opCode == /*OUTPUT*/ 4) {
+                    out.put(load(pAddrs[0]));
                     pc += 2;
-                } else if (opCode == Command.ADJUST_RBO) {
-                    relativeBaseOffset = relativeBaseOffset + param1.get();
+                } else if (opCode == /*ADJUST_RBO*/ 9) {
+                    rbo += load(pAddrs[0]);
                     pc += 2;
-                } else if (opCode == Command.JMP_IF_TRUE) {
-                    pc = (param1.get() > 0) ? param2.get().intValue() : pc + 3;
-                } else if (opCode == Command.JMP_IF_FALSE) {
-                    pc = param1.get() == 0 ? param2.get().intValue() : pc + 3;
-                } else if (opCode == Command.ADD) {
-                    store(param3.addr, param1.get() + param2.get());
+                } else if (opCode == /*JMP_IF_TRUE*/ 5) {
+                    pc = load(pAddrs[0]) > 0 ? load(pAddrs[1]).intValue() : pc + 3;
+                } else if (opCode == /*JMP_IF_FALSE*/ 6) {
+                    pc = load(pAddrs[0]) == 0 ? load(pAddrs[1]).intValue() : pc + 3;
+                } else if (opCode == /*ADD*/ 1) {
+                    store(pAddrs[2], load(pAddrs[0]) + load(pAddrs[1]));
                     pc += 4;
-                } else if (opCode == Command.MULT) {
-                    store(param3.addr, param1.get() * param2.get());
+                } else if (opCode == /*MULT*/ 2) {
+                    store(pAddrs[2], load(pAddrs[0]) * load(pAddrs[1]));
                     pc += 4;
-                } else if (opCode == Command.LESS_THAN) {
-                    store(param3.addr, param1.get() < param2.get() ? 1L : 0L);
+                } else if (opCode == /*LESS_THAN*/ 7) {
+                    store(pAddrs[2], load(pAddrs[0]) < load(pAddrs[1]) ? 1L : 0L);
                     pc += 4;
-                } else if (opCode == Command.EQUAL) {
-                    store(param3.addr, param1.get().equals(param2.get()) ? 1L : 0L);
+                } else if (opCode == /*EQUALS*/ 8) {
+                    store(pAddrs[2], load(pAddrs[0]).equals(load(pAddrs[1])) ? 1L : 0L);
                     pc += 4;
                 }
-            } while (load(pc) != Command.HALT.val);
+            }
         } catch (Throwable t) {
             throw new RuntimeException(t);
         }
     }
 
-    private Parameter getParam(String cmd, int i) {
-        char opMode = cmd.charAt(3 - i);
-        if (opMode == '0') {
-            return new Parameter(ParamMode.POSITION, load(pc + i).intValue(), memory);
-        } else if (opMode == '1') {
-            return new Parameter(ParamMode.IMMEDIATE, pc + i, memory);
-        } else {
-            int addr = Long.valueOf(load(pc + i) + relativeBaseOffset).intValue();
-            return new Parameter(ParamMode.RELATIVE, addr, memory);
+    private int getParam(String cmd, int i) {
+        switch (cmd.charAt(3 - i)) {
+            case /*POSITION*/ '0': return load(pc + i).intValue();
+            case /*IMMEDIATE*/'1': return pc + i;
+            case /* RELATIVE */ '2': return Long.valueOf(load(pc + i) + rbo).intValue();
+            default: throw new RuntimeException("Unsupported opmode");
         }
     }
 
-    private Long load(int loc) {
-        return memory.computeIfAbsent(loc, (x) -> 0L);
-    }
-
-    private void store(int loc, Long val) {
-        memory.put(loc, val);
-    }
-
-    private void printCommand(String cmd, Parameter p1, Parameter p2, Parameter p3, long rbo, Command msg) {
-        if (debugLog)
-            System.out.println(String.format("'%s' %s \t[p1:%s, p2:%s, p3:%s, RBO:%s, PC:%s]", cmd, msg, p1, p2, p3, rbo, pc));
-    }
-
-    @SuppressWarnings("unused")
-    public void setDebugLog(boolean debugLog) {
-        this.debugLog = debugLog;
-    }
+    private Long load(int loc) { return memory.computeIfAbsent(loc, (x) -> 0L); }
+    private void store(int loc, Long val) { memory.put(loc, val); }
 }
