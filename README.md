@@ -46,8 +46,8 @@ Some days there is no direct input to the puzzle, or the input is a number or tw
 * Day 13
 * Day 12
 * Day 12
-* Day 11
-* Day 10
+* [Day 11:Day 11: Space Police](https://adventofcode.com/2019/day/11) - Solutions [Java](https://github.com/saidaspen/aoc2019/blob/master/java/src/se/saidaspen/aoc2019/aoc11/Aoc11.java), Rust
+* [Day 10: Monitoring Station](https://adventofcode.com/2019/day/10) - Solutions [Java](https://github.com/saidaspen/aoc2019/blob/master/java/src/se/saidaspen/aoc2019/aoc10/Aoc10.java), Rust
 * [Day 9: Sensor Boost](https://adventofcode.com/2019/day/9) - Solutions : [Java](https://github.com/saidaspen/aoc2019/tree/master/java/src/se/saidaspen/aoc2019/aoc09), Rust
 * [Day 8: Day 8: Space Image Format](https://adventofcode.com/2019/day/8) - Solutions: [Java](https://github.com/saidaspen/aoc2019/blob/master/java/src/se/saidaspen/aoc2019/aoc08/Aoc08.java), [Rust](https://github.com/saidaspen/aoc2019/blob/master/rust/aoc08/src/main.rs)
 * [Day 7: Amplification Circuit](https://adventofcode.com/2019/day/7) - Solutions: [Java](https://github.com/saidaspen/aoc2019/blob/master/java/src/se/saidaspen/aoc2019/aoc07/Aoc07.java), [Rust](https://github.com/saidaspen/aoc2019/blob/master/rust/aoc07/src/main.rs)
