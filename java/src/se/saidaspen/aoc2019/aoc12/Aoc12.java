@@ -1,20 +1,26 @@
 package se.saidaspen.aoc2019.aoc12;
 
+import se.saidaspen.aoc2019.aoc09.Aoc09;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
-import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-public final class Aoc12 {
+final class Aoc12 {
 
     private final List<Moon> moons;
     private static final int X = 0;
     private static final int Y = 1;
     private static final int Z = 2;
-    private static final int[] DIRS = new int[]{X, Y, Z};
-    private static final long[] PRIMES = {50331653, 1610612741, 805306457, 3145739, 100663319, 201326611, 402653189, 9432859832898L};
 
-    public Aoc12(String input) {
+    public static void main(String[] args) throws IOException {
+        System.out.println(new Aoc12(new String(Files.readAllBytes(Paths.get(args[0])))).getSystemPeriod());
+    }
+    
+    Aoc12(String input) {
         moons = Arrays.stream(input.split("\n"))
                 .map(l -> l.replaceAll("[<>=xyz ]", ""))
                 .map(l -> l.split(","))
@@ -22,41 +28,30 @@ public final class Aoc12 {
                 .collect(Collectors.toList());
     }
 
-    public long getSystemEnergy(int steps) {
+    long getSystemEnergy(int steps) {
         for (long step = 0; step < steps; step++) {
             stepSystem();
         }
         return moons.stream().mapToLong(Moon::energy).sum();
     }
 
-    public long getSystemPeriod() {
+    long getSystemPeriod() {
         int step = 0;
-        long[] periods2 = new long[]{0, 0, 0};
-        while (periods2[X] == 0 || periods2[Y] == 0 || periods2[Z] == 0) {
-            for (int d = 0; d < DIRS.length; d++) {
-                final int e  =  d;
-                if (periods2[d] ==0 && moons.stream().filter(m -> m.velocities[e] == 0).count() == moons.size()) {
-                    periods2[d] =  2*step;
+        long[] periods = new long[]{0, 0, 0};
+        while (periods[X] == 0 || periods[Y] == 0 || periods[Z] == 0) {
+            for (int d = 0; d < 3; d++) {
+                boolean sameAsInit = true;
+                for (Moon m : moons) {
+                    sameAsInit &= m.velocities[d] == 0;
                 }
-                if (periods2[d] ==0 && moons.get(0).velocities[d] == 0 && moons.get(1).velocities[d] == 0 && moons.get(2).velocities[d] == 0 && moons.get(3).velocities[d] == 0) {
-
+                if (periods[d] == 0 && sameAsInit) {
+                    periods[d] = 2 * step;
                 }
             }
             stepSystem();
             step++;
         }
-        return lcm(lcm(periods2[X], periods2[Y]), periods2[Z]);
-    }
-
-    private long systemState(int d) {
-        return PRIMES[(moons.size()) % PRIMES.length] * moons.get(0).coords[d] +
-                PRIMES[(moons.size() + 1) % PRIMES.length] * moons.get(1).coords[d] +
-                PRIMES[(moons.size() + 2) % PRIMES.length] * moons.get(2).coords[d] +
-                PRIMES[(moons.size() + 3) % PRIMES.length] * moons.get(3).coords[d] +
-                PRIMES[(moons.size() + 4) % PRIMES.length] * moons.get(0).velocities[d] +
-                PRIMES[(moons.size() + 5) % PRIMES.length] * moons.get(1).velocities[d] +
-                PRIMES[(moons.size() + 6) % PRIMES.length] * moons.get(2).velocities[d] +
-                PRIMES[(moons.size() + 7) % PRIMES.length] * moons.get(3).velocities[d];
+        return lcm(lcm(periods[X], periods[Y]), periods[Z]);
     }
 
     private void stepSystem() {
@@ -64,11 +59,11 @@ public final class Aoc12 {
             Moon moonA = moons.get(i);
             for (int j = i + 1; j < moons.size(); j++) {
                 Moon moonB = moons.get(j);
-                for (int d = 0; d < DIRS.length; d++) {
-                    if (moonA.coords[d] < moonB.coords[d]) {
+                for (int d = 0; d < 3; d++) {
+                    if (moonA.pos[d] < moonB.pos[d]) {
                         moonA.velocities[d]++;
                         moonB.velocities[d]--;
-                    } else if (moonA.coords[d] > moonB.coords[d]) {
+                    } else if (moonA.pos[d] > moonB.pos[d]) {
                         moonA.velocities[d]--;
                         moonB.velocities[d]++;
                     }
@@ -78,7 +73,7 @@ public final class Aoc12 {
         }
     }
 
-    public static long gcd(long number1, long number2) {
+    private static long gcd(long number1, long number2) {
         if (number1 == 0 || number2 == 0) {
             return number1 + number2;
         } else {
@@ -90,27 +85,27 @@ public final class Aoc12 {
         }
     }
 
-    public static long lcm(long number1, long number2) {
+    private static long lcm(long number1, long number2) {
         return (number1 == 0 || number2 == 0) ? 0 : Math.abs(number1 * number2) / gcd(number1, number2);
     }
 
     private static final class Moon implements Cloneable {
-        int[] coords = new int[]{0, 0, 0};
+        int[] pos = new int[]{0, 0, 0};
         int[] velocities = new int[]{0, 0, 0};
 
-        public Moon(int x, int y, int z) {
-            coords[X] = x;
-            coords[Y] = y;
-            coords[Z] = z;
+        Moon(int x, int y, int z) {
+            pos[X] = x;
+            pos[Y] = y;
+            pos[Z] = z;
         }
 
-        public long energy() {
-            return (Math.abs(velocities[X]) + Math.abs(velocities[Y]) + Math.abs(velocities[Z])) * (Math.abs(coords[X]) + Math.abs(coords[Y]) + Math.abs(coords[Z]));
+        long energy() {
+            return (Math.abs(velocities[X]) + Math.abs(velocities[Y]) + Math.abs(velocities[Z])) * (Math.abs(pos[X]) + Math.abs(pos[Y]) + Math.abs(pos[Z]));
         }
 
-        public void move() {
-            for (int d = 0; d < DIRS.length; d++) {
-                coords[d] += velocities[d];
+        void move() {
+            for (int d = 0; d < 3; d++) {
+                pos[d] += velocities[d];
             }
         }
     }
