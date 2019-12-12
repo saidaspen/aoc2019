@@ -3,80 +3,45 @@ package se.saidaspen.aoc2019.aoc12;
 import java.io.IOException;
 import java.util.*;
 
-public class Aoc12 {
+public class Aoc12Part2 {
 
+
+    public static final int PRINT_EVERY = 100_000;
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        List<Moon> moons = new ArrayList<>();
-        /*Moon p1 = new Moon("A", 17, -9, 4);
-        Moon p2 = new Moon("B", 2, 2, -13);
-        Moon p3 = new Moon("C", -1, 5, -1);
-        Moon p4 = new Moon("D", 4, 7, -7);
-         */
+        List<Moon> moons = getMoons();
+        int step = 0;
 
-        /*Moon p1 = new Moon("A", -1,0,2);
-        Moon p2 = new Moon("B",2,-10,-7);
-        Moon p3 = new Moon("C",4,-8,8);
-        Moon p4 = new Moon("D",3,5,-1);
-         */
+        long[] primes = new long[]{50331653,1610612741,805306457,3145739,100663319,201326611,402653189,9432859832898L};
 
-        Moon p1 = new Moon("A", -8, -10, -0);
-        Moon p2 = new Moon("B", 5, 5, 10);
-        Moon p3 = new Moon("C", 2, -7, 3);
-        Moon p4 = new Moon("D", 9, 8, -3);
-
-        moons.add(p1);
-        moons.add(p2);
-        moons.add(p3);
-        moons.add(p4);
-
-        List<String> logX = new ArrayList<>();
-        List<String> logY = new ArrayList<>();
-        List<String> logZ = new ArrayList<>();
-
-        long periodX =0;
-        long periodY =0;
-        long periodZ =0;
-
-        for (long step = 0; step < 1000; step++) {
-            if (step % 100_000 == 0) {
+        long periodX = 0;
+        List<Long> logX = new ArrayList<>();
+        //List<String> logX = new ArrayList<>();
+        step = 0;
+        while (periodX == 0) {
+            if (step % PRINT_EVERY == 0) {
                 System.out.println(step);
             }
-            String stateX = String.format("%s-%s-%s-%s %s-%s-%s-%s", moons.get(0).x, moons.get(1).x, moons.get(2).x, moons.get(3).x, moons.get(0).vx, moons.get(1).vx, moons.get(2).vx, moons.get(3).vx);
-            String stateY = String.format("%s-%s-%s-%s %s-%s-%s-%s", moons.get(0).y, moons.get(1).y, moons.get(2).y, moons.get(3).y, moons.get(0).vy, moons.get(1).vy, moons.get(2).vy, moons.get(3).vy);
-            String stateZ = String.format("%s-%s-%s-%s %s-%s-%s-%s", moons.get(0).z, moons.get(1).z, moons.get(2).z, moons.get(3).z, moons.get(0).vz, moons.get(1).vz, moons.get(2).vz, moons.get(3).vz);
+            long state = primes[0] * moons.get(0).x +
+                    primes[1] * moons.get(1).x +
+                    primes[2] * moons.get(2).x +
+                    primes[3] * moons.get(3).x +
+                    primes[4] * moons.get(0).vx +
+                    primes[5] * moons.get(1).vx +
+                    primes[6] * moons.get(2).vx +
+                    primes[7] * moons.get(3).vx;
+            /*String state = "" + moons.get(1).x + "" + moons.get(2).x + "" + moons.get(3).x +
+                    "" +moons.get(0).vx +
+                    "" +moons.get(1).vx +
+                    "" +moons.get(2).vx +
+                    "" +moons.get(3).vx;*/
             if (periodX == 0) {
-                if (logX.contains(stateX)) {
+                if (logX.contains(state)) {
                     periodX = step;
                 } else {
-                    logX.add(stateX);
+                    logX.add(state);
                 }
             }
-            if (periodY == 0) {
-                if (logY.contains(stateY)) {
-                    periodY = step;
-                } else {
-                    logY.add(stateY);
-                }
-            }
-            if (periodZ == 0) {
-                if (logZ.contains(stateZ)) {
-                    periodZ = step;
-                } else {
-                    logZ.add(stateZ);
-                }
-            }
-            if (periodX != 0 && periodY != 0 && periodZ != 0) {
-                break;
-            }
-            /*System.out.println("After Step " + step);
-            for (Moon m : moons) {
-                System.out.println(m);
-            }
-            System.out.println();
-
-             */
-
             for (int i = 0; i < moons.size(); i++) {
                 Moon moonA = moons.get(i);
                 // Update velocities
@@ -89,13 +54,50 @@ public class Aoc12 {
                         moonA.vx--;
                         moonB.vx++;
                     }
-                    if (moonA.y < moonB.y) {
-                        moonA.vy++;
-                        moonB.vy--;
-                    } else if (moonA.y > moonB.y) {
-                        moonA.vy--;
-                        moonB.vy++;
-                    }
+                }
+                moonA.x += moonA.vx;
+            }
+            step++;
+        }
+        System.out.println("PeriodX:" + periodX);
+        logX.clear();
+
+        moons = getMoons();
+        step = 0;
+        List<Long> logZ = new ArrayList<>();
+        long periodZ = 0;
+        while (periodZ == 0) {
+            if (step % PRINT_EVERY == 0) {
+                System.out.println(step);
+            }
+            long state = primes[0] * moons.get(0).z +
+                    primes[1] * moons.get(1).z +
+                    primes[2] * moons.get(2).z +
+                    primes[3] * moons.get(3).z +
+                    primes[4] * moons.get(0).vz +
+                    primes[5] * moons.get(1).vz +
+                    primes[6] * moons.get(2).vz +
+                    primes[7] * moons.get(3).vz;
+
+
+            /*String state = "" + moons.get(1).z + "" + moons.get(2).z + "" + moons.get(3).z +
+                    "" +moons.get(0).vz +
+                    "" +moons.get(1).vz +
+                    "" +moons.get(2).vz +
+                    "" +moons.get(3).vz;
+*/
+            if (periodZ == 0) {
+                if (logZ.contains(state)) {
+                    periodZ = step;
+                } else {
+                    logZ.add(state);
+                }
+            }
+            for (int i = 0; i < moons.size(); i++) {
+                Moon moonA = moons.get(i);
+                // Update velocities
+                for (int j = i + 1; j < moons.size(); j++) {
+                    Moon moonB = moons.get(j);
                     if (moonA.z < moonB.z) {
                         moonA.vz++;
                         moonB.vz--;
@@ -104,22 +106,86 @@ public class Aoc12 {
                         moonB.vz++;
                     }
                 }
-                moonA.x += moonA.vx;
-                moonA.y += moonA.vy;
                 moonA.z += moonA.vz;
             }
+            step++;
         }
+        System.out.println("PeriodZ:" + periodZ);
+        logZ.clear();
 
-        long totEnergy = 0;
-        // Apply velocity
-        for (Moon m : moons) {
-            System.out.println(String.format("Kin: %s, Pot: %s, Tot so far: %s", m.kin(), m.pot(), totEnergy));
-            totEnergy = totEnergy + (m.kin() * m.pot());
+        moons = getMoons();
+        step = 0;
+        List<Long> logY = new ArrayList<>();
+        long periodY = 0;
+        while (periodY == 0) {
+            if (step % PRINT_EVERY == 0) {
+                System.out.println(step);
+            }
+            long state = primes[0] * moons.get(0).y +
+                    primes[1] * moons.get(1).y +
+                    primes[2] * moons.get(2).y +
+                    primes[3] * moons.get(3).y +
+                    primes[4] * moons.get(0).vy +
+                    primes[5] * moons.get(1).vy +
+                    primes[6] * moons.get(2).vy +
+                    primes[7] * moons.get(3).vy;
+            if (periodY == 0) {
+                if (logY.contains(state)) {
+                    periodY = step;
+                } else {
+                    logY.add(state);
+                }
+            }
+            for (int i = 0; i < moons.size(); i++) {
+                Moon moonA = moons.get(i);
+                // Update velocities
+                for (int j = i + 1; j < moons.size(); j++) {
+                    Moon moonB = moons.get(j);
+                    if (moonA.y < moonB.y) {
+                        moonA.vy++;
+                        moonB.vy--;
+                    } else if (moonA.y > moonB.y) {
+                        moonA.vy--;
+                        moonB.vy++;
+                    }
+                }
+                moonA.y += moonA.vy;
+            }
+            step++;
+
         }
+        System.out.println("PeriodY:" + periodY);
+        logY.clear();
 
-        System.out.println(String.format("periodx: %s, periody: %s, periodz:%s", periodX, periodY, periodZ));
-        System.out.println(String.format("Universe repeats every %s steps", lcd(lcd(periodX, periodY), periodZ)));
-        System.out.println(totEnergy);
+        System.out.println(String.format("Universe repeats every %s steps", lcm(lcm(periodX, periodY), periodZ)));
+    }
+
+    private static List<Moon> getMoons() {
+        List<Moon> moons = new ArrayList<>();
+
+        Moon p1 = new Moon("A", 17, -9, 4);
+        Moon p2 = new Moon("B", 2, 2, -13);
+        Moon p3 = new Moon("C", -1, 5, -1);
+        Moon p4 = new Moon("D", 4, 7, -7);
+
+/*
+        Moon p1 = new Moon("A", -1,0,2);
+        Moon p2 = new Moon("B",2,-10,-7);
+        Moon p3 = new Moon("C",4,-8,8);
+        Moon p4 = new Moon("D",3,5,-1);
+*/
+
+/*
+        Moon p1 = new Moon("A", -8, -10, 0);
+        Moon p2 = new Moon("B", 5, 5, 10);
+        Moon p3 = new Moon("C", 2, -7, 3);
+        Moon p4 = new Moon("D", 9, -8, -3);
+*/
+        moons.add(p1);
+        moons.add(p2);
+        moons.add(p3);
+        moons.add(p4);
+        return moons;
     }
 
     public static long gcd(long number1, long number2) {
@@ -134,7 +200,7 @@ public class Aoc12 {
         }
     }
 
-    public static long lcd(long number1, long number2) {
+    public static long lcm(long number1, long number2) {
         if (number1 == 0 || number2 == 0)
             return 0;
         else {

@@ -1,159 +1,221 @@
-package se.saidaspen.aoc2019.aoc11;
-
-import se.saidaspen.aoc2019.aoc09.IntComputer;
+package se.saidaspen.aoc2019.aoc12;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
-public class Aoc11 {
+public class Aoc12 {
 
-    private static Map<Point, Long> panelColors = new HashMap<>();
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        String input = new String(Files.readAllBytes(Paths.get(args[0])));
-        new Aoc11().run(input);
+        List<Moon> moons = new ArrayList<>();
+        /*Moon p1 = new Moon("A", 17, -9, 4);
+        Moon p2 = new Moon("B", 2, 2, -13);
+        Moon p3 = new Moon("C", -1, 5, -1);
+        Moon p4 = new Moon("D", 4, 7, -7);
+         */
+
+        /*Moon p1 = new Moon("A", -1,0,2);
+        Moon p2 = new Moon("B",2,-10,-7);
+        Moon p3 = new Moon("C",4,-8,8);
+        Moon p4 = new Moon("D",3,5,-1);
+         */
+
+        Moon p1 = new Moon("A", -8, -10, -0);
+        Moon p2 = new Moon("B", 5, 5, 10);
+        Moon p3 = new Moon("C", 2, -7, 3);
+        Moon p4 = new Moon("D", 9, 8, -3);
+
+        moons.add(p1);
+        moons.add(p2);
+        moons.add(p3);
+        moons.add(p4);
+
+        List<String> logX = new ArrayList<>();
+        List<String> logY = new ArrayList<>();
+        List<String> logZ = new ArrayList<>();
+
+        long periodX =0;
+        long periodY =0;
+        long periodZ =0;
+
+        for (long step = 0; step < 1000; step++) {
+            if (step % 100_000 == 0) {
+                System.out.println(step);
+            }
+            String stateX = String.format("%s-%s-%s-%s %s-%s-%s-%s", moons.get(0).x, moons.get(1).x, moons.get(2).x, moons.get(3).x, moons.get(0).vx, moons.get(1).vx, moons.get(2).vx, moons.get(3).vx);
+            String stateY = String.format("%s-%s-%s-%s %s-%s-%s-%s", moons.get(0).y, moons.get(1).y, moons.get(2).y, moons.get(3).y, moons.get(0).vy, moons.get(1).vy, moons.get(2).vy, moons.get(3).vy);
+            String stateZ = String.format("%s-%s-%s-%s %s-%s-%s-%s", moons.get(0).z, moons.get(1).z, moons.get(2).z, moons.get(3).z, moons.get(0).vz, moons.get(1).vz, moons.get(2).vz, moons.get(3).vz);
+            if (periodX == 0) {
+                if (logX.contains(stateX)) {
+                    periodX = step;
+                } else {
+                    logX.add(stateX);
+                }
+            }
+            if (periodY == 0) {
+                if (logY.contains(stateY)) {
+                    periodY = step;
+                } else {
+                    logY.add(stateY);
+                }
+            }
+            if (periodZ == 0) {
+                if (logZ.contains(stateZ)) {
+                    periodZ = step;
+                } else {
+                    logZ.add(stateZ);
+                }
+            }
+            if (periodX != 0 && periodY != 0 && periodZ != 0) {
+                break;
+            }
+            /*System.out.println("After Step " + step);
+            for (Moon m : moons) {
+                System.out.println(m);
+            }
+            System.out.println();
+
+             */
+
+            for (int i = 0; i < moons.size(); i++) {
+                Moon moonA = moons.get(i);
+                // Update velocities
+                for (int j = i + 1; j < moons.size(); j++) {
+                    Moon moonB = moons.get(j);
+                    if (moonA.x < moonB.x) {
+                        moonA.vx++;
+                        moonB.vx--;
+                    } else if (moonA.x > moonB.x) {
+                        moonA.vx--;
+                        moonB.vx++;
+                    }
+                    if (moonA.y < moonB.y) {
+                        moonA.vy++;
+                        moonB.vy--;
+                    } else if (moonA.y > moonB.y) {
+                        moonA.vy--;
+                        moonB.vy++;
+                    }
+                    if (moonA.z < moonB.z) {
+                        moonA.vz++;
+                        moonB.vz--;
+                    } else if (moonA.z > moonB.z) {
+                        moonA.vz--;
+                        moonB.vz++;
+                    }
+                }
+                moonA.x += moonA.vx;
+                moonA.y += moonA.vy;
+                moonA.z += moonA.vz;
+            }
+        }
+
+        long totEnergy = 0;
+        // Apply velocity
+        for (Moon m : moons) {
+            System.out.println(String.format("Kin: %s, Pot: %s, Tot so far: %s", m.kin(), m.pot(), totEnergy));
+            totEnergy = totEnergy + (m.kin() * m.pot());
+        }
+
+        System.out.println(String.format("periodx: %s, periody: %s, periodz:%s", periodX, periodY, periodZ));
+        System.out.println(String.format("Universe repeats every %s steps", lcd(lcd(periodX, periodY), periodZ)));
+        System.out.println(totEnergy);
     }
 
-    private static final class Point {
-        private int x, y;
-
-        private Point(int x, int y) {
-            this.x = x;
-            this.y = y;
+    public static long gcd(long number1, long number2) {
+        if (number1 == 0 || number2 == 0) {
+            return number1 + number2;
+        } else {
+            long absNumber1 = Math.abs(number1);
+            long absNumber2 = Math.abs(number2);
+            long biggerValue = Math.max(absNumber1, absNumber2);
+            long smallerValue = Math.min(absNumber1, absNumber2);
+            return gcd(biggerValue % smallerValue, smallerValue);
         }
+    }
 
-        @Override
-        public String toString() {
-            return "(" + x + ", " + y + ")";
+    public static long lcd(long number1, long number2) {
+        if (number1 == 0 || number2 == 0)
+            return 0;
+        else {
+            long gcd = gcd(number1, number2);
+            return Math.abs(number1 * number2) / gcd;
         }
+    }
+
+    private static class Moon {
+        public String name;
+        int x;
+        int y;
+        int z = 0;
 
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
-            Point p = (Point) o;
-            return x == p.x && y == p.y;
+            Moon moon = (Moon) o;
+            return x == moon.x &&
+                    y == moon.y &&
+                    z == moon.z &&
+                    vx == moon.vx &&
+                    vy == moon.vy &&
+                    vz == moon.vz &&
+                    Objects.equals(name, moon.name);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(x, y);
+            return Objects.hash(name, x, y, z, vx, vy, vz);
         }
-    }
 
-    public void run(String input) throws InterruptedException {
-        Long[] code = Arrays.stream(input.split(","))
-                .mapToLong(Long::parseLong)
-                .boxed()
-                .toArray(Long[]::new);
-        ArrayBlockingQueue<Long> in = new ArrayBlockingQueue<>(10000);
-        ArrayBlockingQueue<Long> out = new ArrayBlockingQueue<>(10000);
-        Long starVal = 1L; // Give it a starting value of 1, for white. Part 2.
-        in.put(starVal);
-        IntComputer cpu = new IntComputer(code, in, out);
-        Robot robot = new Robot(0, 0, out, in);
-        ThreadPoolExecutor pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(2);
-        pool.execute(cpu);
-        pool.execute(robot);
-        pool.shutdown();
-        pool.awaitTermination(100L, TimeUnit.DAYS);
-        System.out.println(String.format("Painted %s panels at least once", panelColors.keySet().size()));
-        printMap(panelColors);
-    }
+        int vx, vy, vz = 0;
 
-    private void printMap(Map<Point, Long> panelColors) {
-        Map<Point, Long> canvas = reorient(panelColors);
-        var largestX = 0;
-        var largestY = 0;
-        for (Point p : canvas.keySet()) {
-            largestX = Math.max(p.x, largestX);
-            largestY = Math.max(p.y, largestY);
-        }
-        List<List<Long>> lines = emptyLines(largestX, largestY);
-        for (Point p : canvas.keySet()) {
-            lines.get(p.y).set(p.x, canvas.get(p));
-        }
-        render(lines);
-    }
-
-    private Map<Point, Long> reorient(Map<Point, Long> panelColors) {
-        Map<Point, Long> outMap = new HashMap<>();
-        int minX = 0;
-        int minY = 0;
-        for (Point p : panelColors.keySet()) {
-            minX = Math.min(p.x, minX);
-            minY = Math.min(p.y, minY);
-        }
-        for (Point p : panelColors.keySet()) {
-            outMap.put(new Point(p.x + Math.abs(minX), p.y + Math.abs(minY)), panelColors.get(p));
-        }
-        return outMap;
-    }
-
-    private void render(List<List<Long>> lines) {
-        for (int i = lines.size() - 1; i >= 0; i--) {
-            List<Long> row = lines.get(i);
-            StringBuilder sb = new StringBuilder();
-            for (Long aLong : row) {
-                sb.append(aLong == 0 ? "░" : "█");
-            }
-            System.out.println(sb);
-        }
-    }
-
-    private List<List<Long>> emptyLines(int xMax, int yMax) {
-        List<List<Long>> lines = new ArrayList<>();
-        for (int row = 0; row <= yMax; row++) {
-            List<Long> r = new ArrayList<>();
-            for (int col = 0; col <= xMax; col++) {
-                r.add(0L);
-            }
-            lines.add(r);
-        }
-        return lines;
-    }
-
-    private static class Robot implements Runnable {
-        public static final int TIMEOUT = 1;
-        private int x, y, dir;
-        private ArrayBlockingQueue<Long> input, output;
-
-        public Robot(int x, int y, ArrayBlockingQueue<Long> input, ArrayBlockingQueue<Long> output) {
+        public Moon(String name, int x, int y, int z) {
+            this.name = name;
             this.x = x;
             this.y = y;
-            this.dir = 0; // Start facing up.
-            this.input = input;
-            this.output = output;
+            this.z = z;
+        }
+
+        public long pot() {
+            return Math.abs(x) + Math.abs(y) + Math.abs(z);
+        }
+
+        public long kin() {
+            return Math.abs(vx) + Math.abs(vy) + Math.abs(vz);
+        }
+
+        public String toString() {
+            return String.format("pos=<x=%s, y=%s, z=%s>, vel=<x=%s, y=%s, z=%s>,", x, y, z, vx, vy, vz);
+        }
+
+        public Moon createClone() {
+            Moon m = new Moon(this.name, this.x, this.y, this.z);
+            m.vx = this.vx;
+            m.vy = this.vy;
+            m.vz = this.vz;
+            return m;
+        }
+    }
+
+    private static class State {
+        private Map<String, Moon> moons = new HashMap<>();
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            State state = (State) o;
+            for (String mName : moons.keySet())
+                if (!this.moons.get(mName).equals(state.moons.get(mName))) {
+                    return false;
+                }
+            return true;
         }
 
         @Override
-        public void run() {
-            System.out.println("Robot starting...");
-            try {
-                while (true) {
-                    var colorOver = panelColors.getOrDefault(new Point(x, y), 0L);
-                    output.put(colorOver);
-                    var color = input.poll(TIMEOUT, TimeUnit.SECONDS);
-                    var turnDir = input.poll(TIMEOUT, TimeUnit.SECONDS);
-                    if (color == null || turnDir == null) { // Timed out. Finished.
-                        return;
-                    }
-                    System.out.print(String.format("Painted (%s, %s): %s. ", x, y, (color == 0L ? "black" : "white")));
-                    panelColors.put(new Point(x, y), color == 0L ? 0L : 1L);
-                    dir = turnDir == 0 ? (dir + 270) % 360 : (dir + 90) % 360;
-                    y = dir == 0 ? y + 1 : dir == 180 ? y - 1 : y;
-                    x = dir == 90 ? x + 1 : dir == 270 ? x - 1 : x;
-                    System.out.print(String.format("Moved to (%s, %s)\n", x, y));
-                }
-            } catch (Throwable t) {
-                throw new RuntimeException(t);
-            }
+        public int hashCode() {
+            return Objects.hash(moons);
         }
     }
 }
