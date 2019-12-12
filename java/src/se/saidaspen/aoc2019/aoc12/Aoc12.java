@@ -31,23 +31,21 @@ public final class Aoc12 {
 
     public long getSystemPeriod() {
         int step = 0;
-        TreeSet<Long>[] states = new TreeSet[]{new TreeSet<Long>(), new TreeSet<Long>(), new TreeSet<Long>()};
-        long[] periods = new long[]{0, 0, 0};
-        while (periods[X] == 0 || periods[Y] == 0 || periods[Z] == 0) {
+        long[] periods2 = new long[]{0, 0, 0};
+        while (periods2[X] == 0 || periods2[Y] == 0 || periods2[Z] == 0) {
             for (int d = 0; d < DIRS.length; d++) {
-                if (periods[d] != 0)
-                    continue;
-                long state = systemState(d);
-                if (states[d].contains(state)) {
-                    periods[d] = step;
-                } else {
-                    states[d].add(state);
+                final int e  =  d;
+                if (periods2[d] ==0 && moons.stream().filter(m -> m.velocities[e] == 0).count() == moons.size()) {
+                    periods2[d] =  2*step;
+                }
+                if (periods2[d] ==0 && moons.get(0).velocities[d] == 0 && moons.get(1).velocities[d] == 0 && moons.get(2).velocities[d] == 0 && moons.get(3).velocities[d] == 0) {
+
                 }
             }
             stepSystem();
             step++;
         }
-        return lcm(lcm(periods[X], periods[Y]), periods[Z]);
+        return lcm(lcm(periods2[X], periods2[Y]), periods2[Z]);
     }
 
     private long systemState(int d) {
