@@ -126,64 +126,31 @@ final class Aoc13 {
         public void run() {
             try {
                 while (true) {
-                    //System.out.println(clearScreen);
+                    System.out.println(score);
                     List<Tile> tiles = getTiles();
-                    toBoard(tiles);
-                    draw();
-                    String input = System.console().readLine();
-                    if (input != null) {
-                        if ("quit".equalsIgnoreCase(input)) {
-                            System.out.println("Exit program");
-                        } else if ("a".equalsIgnoreCase(input)) {
-                            jPos = -1;
-                        } else if ("d".equalsIgnoreCase(input)) {
-                            jPos = 1;
-                        } else if (" ".equalsIgnoreCase(input)) {
-                            jPos = 0;
+                    int ballX = 0, ballY= 0;
+                    int padelX = 0, padelY= 0;
+                    int joystick = 0;
+                    for (Tile t : tiles) {
+                        if (t.id == 4) {
+                            ballX = t.x;
+                            ballY = t.y;
+                        }
+                        if (t.id == 3) {
+                            padelX = t.x;
+                            padelY = t.y;
                         }
                     }
-                    out.put((long) jPos);
+                    if (padelX > ballX) {
+                        joystick = -1;
+                    } else if (padelX < ballX) {
+                        joystick = 1;
+                    }
+                    out.put((long) joystick);
+
                 }
             } catch (Exception e) {
                 throw new RuntimeException(e);
-            }
-        }
-
-        private void draw() {
-            StringBuilder sb = new StringBuilder();
-            for (int row = 0; row < board.length; row++) {
-                for (int col = 0; col < board[0].length; col++) {
-                    sb.append(drawPixel(board[row][col]));
-                }
-                sb.append("\n");
-            }
-            System.out.print(String.format("\033[2J"));
-            System.out.println(sb);
-            System.out.println("Score: " + score);
-        }
-
-        private char drawPixel(Integer id) {
-            if (id == 1) {
-                return '▎'; //wall
-            } else if (id == 2) {
-                return '█'; //block
-            } else if (id == 3) {
-                return '▂'; //hor padel
-            } else if (id == 4) {
-                return '●'; //ball
-            } else {
-                return ' ';
-            }
-        }
-
-        private void toBoard(List<Tile> tiles) {
-            /*for (int i = 0; i < height; i++) {
-                for (int j = 0; j < width; j++) {
-                    board[i][j] = 0;
-                }
-            }*/
-            for (Tile t : tiles) {
-                board[t.y][t.x] = t.id;
             }
         }
 
