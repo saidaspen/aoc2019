@@ -32,7 +32,7 @@ public final class IntComputer implements Runnable {
                 pAddrs[1] = getParam(cmd, 2); // Param 2
                 pAddrs[2] = getParam(cmd, 3); // Param 3
                 if (opCode == /*INPUT*/ 3) {
-                    store(pAddrs[0], in.poll(10L, TimeUnit.DAYS));
+                    store(pAddrs[0], in.poll(5L, TimeUnit.SECONDS));
                     pc += 2;
                 } else if (opCode == /*OUTPUT*/ 4) {
                     out.put(load(pAddrs[0]));
