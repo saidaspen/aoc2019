@@ -2,13 +2,10 @@ package se.saidaspen.aoc2019.aoc13;
 
 import se.saidaspen.aoc2019.aoc09.IntComputer;
 
-import java.awt.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Scanner;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -17,15 +14,14 @@ import java.util.stream.Collectors;
 
 final class Aoc13 {
 
-
     private final Long[] code;
 
     public static void main(String[] args) throws Exception {
         String input = new String(Files.readAllBytes(Paths.get(args[0])));
-        System.out.println(new Aoc13(input).part2());
+        new Aoc13(input).part2();
     }
 
-    Aoc13(String input) {
+    private Aoc13(String input) {
         List<String> lines = Arrays.stream(input.split("\n"))
                 .map(String::trim).collect(Collectors.toList());
         code = Arrays.stream(input.split(","))
@@ -35,16 +31,27 @@ final class Aoc13 {
                 .toArray(Long[]::new);
     }
 
-    private static class Tile {
-        int x, y, id;
+    private void part1() throws Exception {
+        int[][] board = runGame();
+        int blockCnt = 0;
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board[0].length; j++) {
+                if (board[i][j] == 2)  {
+                    blockCnt++;
+                }
+            }
+        }
+        System.out.println(blockCnt);
     }
 
-    public String part2() throws Exception {
+    private void part2() throws Exception {
+        code[0] = 2L;
+        runGame();
+    }
+
+    private int[][] runGame() throws InterruptedException {
         ArrayBlockingQueue<Long> in = new ArrayBlockingQueue<>(10000);
         ArrayBlockingQueue<Long> out = new ArrayBlockingQueue<>(10000);
-        //Long starVal = 2L;
-        //in.put(starVal);
-        code[0] = 2L;
         IntComputer cpu = new IntComputer(code, in, out);
         Game game = new Game(out, in);
         ThreadPoolExecutor pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(2);
@@ -52,61 +59,21 @@ final class Aoc13 {
         pool.execute(game);
         pool.shutdown();
         pool.awaitTermination(100L, TimeUnit.DAYS);
-        return "done";
+        return game.board;
     }
 
-    public String part1() throws Exception {
-        ArrayBlockingQueue<Long> in = new ArrayBlockingQueue<>(10000);
-        ArrayBlockingQueue<Long> out = new ArrayBlockingQueue<>(10000);
-        //Long starVal = 1L;
-        //in.put(starVal);
-        IntComputer cpu = new IntComputer(code, in, out);
-        ThreadPoolExecutor pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(2);
-        pool.execute(cpu);
-        pool.shutdown();
-        pool.awaitTermination(100L, TimeUnit.DAYS);
-        List<Long> outvals = new ArrayList<>();
-        while(true) {
-            Long oVal = out.poll(1, TimeUnit.SECONDS);
-            if (oVal == null)
-                break;
-            else
-                outvals.add(oVal);
-        }
-
-        List<Tile> tiles = new ArrayList<>();
-        Tile tile = new Tile();
-        for (int i = 0; i < outvals.size(); i++) {
-            if (i%3 == 0) {
-                tile = new Tile();
-                tile.x = outvals.get(i).intValue();
-            }
-            else if (i%3 == 1) {
-                tile.y = outvals.get(i).intValue();
-            }
-            else if (i%3 == 2) {
-                tile.id = outvals.get(i).intValue();
-                tiles.add(tile);
-            }
-        }
-
-        System.out.println("Tiles size:" + tiles.size());
-        System.out.println("outvals size:" + outvals.size());
-        System.out.println(tiles.stream().filter(t -> t.id == 2).count());
-        return "";
-    }
-
-    private class Game implements Runnable {
+    private static class Game implements Runnable {
         private final ArrayBlockingQueue<Long> out;
         private final ArrayBlockingQueue<Long> in;
-        int width = 100;
-        private Long score;
-        private int height = 30;
-        int[][] board = new int[height][width];
-        String clearScreen;
-        int jPos = 0;
+        private final int width = 100;
+        private final int height = 22;
+        private boolean stopped = false;
 
-        public Game(ArrayBlockingQueue<Long> out, ArrayBlockingQueue<Long> in) {
+        private int score;
+        int[][] board = new int[height][width];
+        private final Thread updaterThread;
+
+        Game(ArrayBlockingQueue<Long> in, ArrayBlockingQueue<Long> out) {
             this.out = out;
             this.in = in;
             for (int i = 0; i < height; i++) {
@@ -114,82 +81,102 @@ final class Aoc13 {
                     board[i][j] = 0;
                 }
             }
-
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < (width + 1) * height; i++) {
-                sb.append('\b');
-            }
-            clearScreen = sb.toString();
+            Runnable updater = new BoardUpdater(this);
+            updaterThread = new Thread(updater);
+            updaterThread.start();
         }
 
         @Override
         public void run() {
             try {
-                while (true) {
-                    System.out.println(score);
-                    List<Tile> tiles = getTiles();
-                    int ballX = 0, ballY= 0;
-                    int padelX = 0, padelY= 0;
+                while (!stopped) {
+                    Thread.sleep(45L);
+                    draw();
+                    int ballX = 0;
+                    int padX = 0;
                     int joystick = 0;
-                    for (Tile t : tiles) {
-                        if (t.id == 4) {
-                            ballX = t.x;
-                            ballY = t.y;
-                        }
-                        if (t.id == 3) {
-                            padelX = t.x;
-                            padelY = t.y;
+                    for (int row = 0; row < height; row++) {
+                        for (int col = 0; col < width; col++) {
+                            int val = board[row][col];
+                            ballX = val==4 ? col : ballX;
+                            padX = val == 3 ? col : padX;
                         }
                     }
-                    if (padelX > ballX) {
-                        joystick = -1;
-                    } else if (padelX < ballX) {
-                        joystick = 1;
+                    if (padX > ballX) {
+                        joystick -= 1;
+                    } else if (padX < ballX) {
+                        joystick += 1;
                     }
                     out.put((long) joystick);
-
                 }
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         }
 
-        private List<Tile> getTiles() throws InterruptedException {
-            List<Long> outvals = new ArrayList<>();
-            while (true) {
-                Long oVal = out.poll(300, TimeUnit.MILLISECONDS);
-                if (oVal == null)
-                    break;
-                else
-                    outvals.add(oVal);
-            }
-
-            List<Tile> tiles = new ArrayList<>();
-            Tile tile = new Tile();
-            boolean rs = false;
-            for (int i = 0; i < outvals.size(); i++) {
-                Long val = outvals.get(i);
-                if (i % 3 == 0) {
-                    if (val == -1) {
-                        rs = true;
-                    } else {
-                        tile = new Tile();
-                        tile.x = val.intValue();
-                    }
-                } else if (i % 3 == 1) {
-                    if (!rs)
-                        tile.y = val.intValue();
-                } else if (i % 3 == 2) {
-                    if (rs) {
-                        this.score = val;
-                    } else {
-                        tile.id = val.intValue();
-                        tiles.add(tile);
-                    }
+        private void draw() {
+            StringBuilder sb = new StringBuilder();
+            for (int[] rows : board) {
+                for (int col = 0; col < board[0].length; col++) {
+                    sb.append(toPixel(rows[col]));
                 }
+                sb.append("\n");
             }
-            return tiles;
+            System.out.print("\033[2J"); // Clear screen
+            System.out.println(sb);
+            System.out.println("Score: " + score);
         }
 
+        private char toPixel(Integer id) {
+            if (id == 1) {
+                return '█'; //wall
+            } else if (id == 2) {
+                return '▢'; //block
+            } else if (id == 3) {
+                return '▔';
+            } else if (id == 4) {
+                return '●'; //ball
+            } else {
+                return ' ';
+            }
+        }
+    }
+
+    private static class BoardUpdater implements Runnable {
+        private final Game game;
+
+        BoardUpdater(Game game) {
+            this.game = game;
+        }
+
+        @Override
+        public void run() {
+            while (true) {
+                try {
+                    int x = 0;
+                    int y = 0;
+                    for (int i = 0; i < 3; i++) {
+                        Long oVal = game.in.poll(5, TimeUnit.SECONDS);
+                        if (oVal == null) {
+                            game.stopped = true;
+                            return;
+                        }
+                        if (i == 0) {
+                            x = oVal.intValue();
+                        } else if (i == 1) {
+                            y = oVal.intValue();
+                        } else {
+                            if (x == -1) {
+                                game.score = oVal.intValue();
+                            } else {
+                                game.board[y][x] = oVal.intValue();
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 }

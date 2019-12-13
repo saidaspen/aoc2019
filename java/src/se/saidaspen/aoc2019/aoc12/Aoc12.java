@@ -19,7 +19,7 @@ final class Aoc12 {
     public static void main(String[] args) throws IOException {
         System.out.println(new Aoc12(new String(Files.readAllBytes(Paths.get(args[0])))).getSystemPeriod());
     }
-    
+
     Aoc12(String input) {
         moons = Arrays.stream(input.split("\n"))
                 .map(l -> l.replaceAll("[<>=xyz ]", ""))

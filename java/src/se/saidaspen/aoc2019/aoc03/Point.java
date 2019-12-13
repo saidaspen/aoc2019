@@ -3,14 +3,14 @@ package se.saidaspen.aoc2019.aoc03;
 import java.util.Objects;
 
 public final class Point {
-    final int x, y;
+    public final int x, y;
 
     @Override
     public String toString() {
         return String.format("(x=%s, y=%s)", x, y);
     }
 
-    Point(int x, int y) {
+    public Point(int x, int y) {
         this.x = x;
         this.y = y;
     }
