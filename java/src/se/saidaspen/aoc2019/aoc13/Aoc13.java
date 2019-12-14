@@ -32,9 +32,6 @@ final class Aoc13 {
     private void part1() throws Exception {
         int[][] board = runGame();
         int blockCnt = 0;
-
-        //IntStream.range(0, board.length).flatMap(row -> IntStream.range(0, board[0].length)).map(j ->)
-
         for (int[] rows : board) {
             IntStream.range(0, board[0].length).mapToObj(j -> rows[j] == 2).count();
             for (int j = 0; j < board[0].length; j++) {
