@@ -5,12 +5,11 @@ import se.saidaspen.aoc2019.aoc09.IntComputer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 final class Aoc13 {
 
@@ -22,8 +21,6 @@ final class Aoc13 {
     }
 
     private Aoc13(String input) {
-        List<String> lines = Arrays.stream(input.split("\n"))
-                .map(String::trim).collect(Collectors.toList());
         code = Arrays.stream(input.split(","))
                 .map(String::trim)
                 .mapToLong(Long::parseLong)
@@ -31,12 +28,17 @@ final class Aoc13 {
                 .toArray(Long[]::new);
     }
 
+    @SuppressWarnings("unused")
     private void part1() throws Exception {
         int[][] board = runGame();
         int blockCnt = 0;
-        for (int i = 0; i < board.length; i++) {
+
+        //IntStream.range(0, board.length).flatMap(row -> IntStream.range(0, board[0].length)).map(j ->)
+
+        for (int[] rows : board) {
+            IntStream.range(0, board[0].length).mapToObj(j -> rows[j] == 2).count();
             for (int j = 0; j < board[0].length; j++) {
-                if (board[i][j] == 2)  {
+                if (rows[j] == 2) {
                     blockCnt++;
                 }
             }
@@ -98,7 +100,7 @@ final class Aoc13 {
                     for (int row = 0; row < height; row++) {
                         for (int col = 0; col < width; col++) {
                             int val = board[row][col];
-                            ballX = val==4 ? col : ballX;
+                            ballX = val == 4 ? col : ballX;
                             padX = val == 3 ? col : padX;
                         }
                     }
