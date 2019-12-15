@@ -4,7 +4,6 @@ import se.saidaspen.aoc2019.aoc03.Point;
 import se.saidaspen.aoc2019.aoc09.IntComputer;
 
 import java.io.IOException;
-import java.io.PipedInputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
@@ -22,10 +21,17 @@ public class Aoc15 {
 
     public static void main(String[] args) throws IOException, InterruptedException {
         String input = new String(Files.readAllBytes(Paths.get(args[0])));
-        new Aoc15(input).part1();
+        Aoc15 aoc15 = new Aoc15(input);
+        RepairBot robot = new RepairBot(aoc15.code, 0, 0);
+        ThreadPoolExecutor pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
+        pool.execute(robot);
+        pool.shutdown();
+        pool.awaitTermination(100L, TimeUnit.DAYS);
+        printMap(map);
+        aoc15.simulateOxygenSpread(map);
     }
 
-    Aoc15(String input) {
+    private Aoc15(String input) {
         code = Arrays.stream(input.split(","))
                 .map(String::trim)
                 .mapToLong(Long::parseLong)
@@ -33,25 +39,11 @@ public class Aoc15 {
                 .toArray(Long[]::new);
     }
 
-    void part1() throws InterruptedException {
-        ArrayBlockingQueue<Long> in = new ArrayBlockingQueue<>(10000);
-        ArrayBlockingQueue<Long> out = new ArrayBlockingQueue<>(10000);
-        IntComputer cpu = new IntComputer(code, in, out);
-        RepairBot robot = new RepairBot(0, 0, out, in);
-        ThreadPoolExecutor pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(2);
-        pool.execute(cpu);
-        pool.execute(robot);
-        pool.shutdown();
-        pool.awaitTermination(100L, TimeUnit.DAYS);
-        printMap(map);
-        simulateOxygenSpread(map);
-    }
-
     private void simulateOxygenSpread(Map<Point, Character> map) throws InterruptedException {
         display[3] = 2L;
         Point oxygenStartPos = find(map, 'X').get(0);
         map.put(oxygenStartPos, 'O');
-        List<Point> oxygenPoints = new ArrayList<>();
+        List<Point> oxygenPoints;
         Long cnt = 1L;
         do {
             Thread.sleep(20L);
@@ -67,7 +59,7 @@ public class Aoc15 {
             cnt++;
             printMap(map);
             display[2] = cnt;
-        } while(!isFilled());
+        } while (!isFilled());
     }
 
     private boolean isFilled() {
@@ -99,7 +91,7 @@ public class Aoc15 {
     }
 
     private static void printMap(Map<Point, Character> panelColors) {
-        if (!PRINT){
+        if (!PRINT) {
             return;
         }
         System.out.print("\033[2J"); // Clear screen
@@ -123,10 +115,7 @@ public class Aoc15 {
         } else if (display[3] == 2) {
             mode = "FILL OXYGEN";
         }
-        System.out.println("Robot steps: " + display[0]);
-        System.out.println("Closest path: " + display[1]);
-        System.out.println("Oxygen spread (s): " + display[2]);
-        System.out.println("Mode: " + mode);
+        System.out.println("Mode: " + mode + "\t" + "Robot steps: " + display[0] + "\t"  + "Closest path: " + display[1] + "\t" + "Oxygen spread (s): " + display[2]);
     }
 
     private static List<List<Character>> emptyLines(int xMax, int yMax) {
@@ -140,6 +129,7 @@ public class Aoc15 {
         }
         return lines;
     }
+
     private static Map<Point, Character> reorient(Map<Point, Character> map) {
         Map<Point, Character> outMap = new HashMap<>();
         int minX = 0;
@@ -173,35 +163,41 @@ public class Aoc15 {
         private final Random rn = new Random();
         private final Stack<Point> log = new Stack();
         private Point oxygenPos;
+        private final IntComputer cpu;
 
-        public RepairBot(int x, int y, ArrayBlockingQueue<Long> input, ArrayBlockingQueue<Long> output) {
+        RepairBot(Long[] code, int x, int y) {
+            this.input = new ArrayBlockingQueue<>(10000);
+            this.output = new ArrayBlockingQueue<>(10000);
+            cpu = new IntComputer(code, output, input);
             this.x = x;
             this.y = y;
-            this.input = input;
-            this.output = output;
             map.put(new Point(x, y), 'R');
         }
 
         @Override
         public void run() {
+            ThreadPoolExecutor pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
+            pool.execute(cpu);
+            pool.shutdown();
             try {
                 while (!mapKnown()) {
                     step++;
                     display[0] = step;
-                    if (step %100 == 0 ) {
+                    if (step % 100 == 0) {
                         printMap(map);
                     }
                     Point currPos = new Point(x, y);
                     if (log.contains(currPos)) {
-                        while(!log.pop().equals(currPos)) {
-
+                        while (!log.pop().equals(currPos)) {
+                            // Do nothing, we just want to pop the items.
                         }
                     }
                     log.push(currPos);
+
                     output.put((long) dir); // Send dir
                     Long status = input.poll(5, TimeUnit.SECONDS);
                     int nextDir = randInput();//getInput();
-                    if (status == null ){
+                    if (status == null) {
                         return;
                     } else if (status == 0) {
                         updateMap('█');
@@ -243,33 +239,15 @@ public class Aoc15 {
             return rn.nextInt(4) + 1;
         }
 
-        private int getInput() {
-            Scanner in = new Scanner(System.in);
-            while(true) {
-                String s = in.nextLine();
-                // north (1), south (2), west (3), and east (4).
-                if (s.equalsIgnoreCase("a")) {
-                    return 3;
-                } else if (s.equalsIgnoreCase("s")) {
-                    return 2;
-                } else if (s.equalsIgnoreCase("d")) {
-                    return 4;
-                } else if (s.equalsIgnoreCase("w")) {
-                    return 1;
-                }
-                System.out.println("Only 1-4 allowed");
-            }
-        }
-
         private void updateMap(char tile) {
             if (dir == 1) {
-                map.put(new Point(x, y+1), tile);
-            } else if (dir == 2){
-                map.put(new Point(x, y-1), tile);
+                map.put(new Point(x, y + 1), tile);
+            } else if (dir == 2) {
+                map.put(new Point(x, y - 1), tile);
             } else if (dir == 3) {
-                map.put(new Point(x-1, y), tile);
+                map.put(new Point(x - 1, y), tile);
             } else if (dir == 4) {
-                map.put(new Point(x+1, y), tile);
+                map.put(new Point(x + 1, y), tile);
             }
         }
 
@@ -277,14 +255,14 @@ public class Aoc15 {
             map.remove(new Point(x, y));
             if (x == 0 && y == 0) {
                 map.put(new Point(x, y), 'S');
-            } else if (oxygenPos != null && x == oxygenPos.x && y == oxygenPos.y){
+            } else if (oxygenPos != null && x == oxygenPos.x && y == oxygenPos.y) {
                 map.put(new Point(x, y), 'X');
             } else {
                 map.put(new Point(x, y), '.');
             }
             if (dir == 1) {
                 this.y++;
-            } else if (dir == 2){
+            } else if (dir == 2) {
                 this.y--;
             } else if (dir == 3) {
                 this.x--;
