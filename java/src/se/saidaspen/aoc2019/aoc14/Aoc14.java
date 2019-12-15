@@ -26,7 +26,6 @@ final class Aoc14 {
         return neededOrFor(new Ingredient(ingredient.quant, ingredient.what), new HashMap<>());
     }
 
-    @SuppressWarnings("IntegerDivisionInFloatingPointContext")
     private long neededOrFor(Ingredient ing, Map<String, Long> inv) {
         if (ing.what.equals("ORE")) {
             return ing.quant;
