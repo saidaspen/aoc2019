@@ -14,7 +14,39 @@ import java.util.concurrent.TimeUnit;
 
 public class Aoc15 {
 
+    public final static int NORTH = 0;
+    public final static int SOUTH = 1;
+    public final static int WEST = 2;
+    public final static int EAST = 3;
+    public static final String ANSI_RESET = "\u001B[0m";
+    public static final String ANSI_BLACK = "\u001B[30m";
+    public static final String ANSI_RED = "\u001B[31m";
+    public static final String ANSI_GREEN = "\u001B[32m";
+    public static final String ANSI_YELLOW = "\u001B[33m";
+    public static final String ANSI_BLUE = "\u001B[34m";
+    public static final String ANSI_PURPLE = "\u001B[35m";
+    public static final String ANSI_CYAN = "\u001B[36m";
+    public static final String ANSI_WHITE = "\u001B[37m";
+    public static final String ANSI_BLACK_BACKGROUND = "\u001B[40m";
+    public static final String ANSI_RED_BACKGROUND = "\u001B[41m";
+    public static final String ANSI_GREEN_BACKGROUND = "\u001B[42m";
+    public static final String ANSI_YELLOW_BACKGROUND = "\u001B[43m";
+    public static final String ANSI_BLUE_BACKGROUND = "\u001B[44m";
+    public static final String ANSI_PURPLE_BACKGROUND = "\u001B[45m";
+    public static final String ANSI_CYAN_BACKGROUND = "\u001B[46m";
+    public static final String ANSI_WHITE_BACKGROUND = "\u001B[47m";
+
     private static final boolean PRINT = true;
+    static final Character TILE_WALL = '█';
+    static final Character TILE_OXYGEN_GEN = 'X';
+    static final Character TILE_OXYGEN = 'O';
+
+    private static final long MODE_MAP = 1L;
+    private static final long MODE_OXYGEN = 2L;
+    private static final char TILE_ROBOT = 'R';
+    private static final char TILE_KNOWN = '.';
+    public static final char TILE_EMPTY = ' ';
+
     private final Long[] code;
     private static Map<Point, Character> map = new HashMap<>();
     private static Long[] display = new Long[]{0L, 0L, 0L, 0L};
@@ -22,7 +54,7 @@ public class Aoc15 {
     public static void main(String[] args) throws IOException, InterruptedException {
         String input = new String(Files.readAllBytes(Paths.get(args[0])));
         Aoc15 aoc15 = new Aoc15(input);
-        RepairBot robot = new RepairBot(aoc15.code, 0, 0);
+        RepairBot robot = new RepairBot(aoc15.code, new Point(0, 0), new WallSearch());
         ThreadPoolExecutor pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
         pool.execute(robot);
         pool.shutdown();
@@ -40,19 +72,19 @@ public class Aoc15 {
     }
 
     private void simulateOxygenSpread(Map<Point, Character> map) throws InterruptedException {
-        display[3] = 2L;
-        Point oxygenStartPos = find(map, 'X').get(0);
-        map.put(oxygenStartPos, 'O');
+        display[3] = MODE_OXYGEN;
+        Point oxygenStartPos = find(map, TILE_OXYGEN_GEN).get(0);
+        map.put(oxygenStartPos, TILE_OXYGEN);
         List<Point> oxygenPoints;
         Long cnt = 1L;
         do {
             Thread.sleep(20L);
-            oxygenPoints = find(map, 'O');
+            oxygenPoints = find(map, TILE_OXYGEN);
             for (Point p : oxygenPoints) {
-                List<Point> adjacent = getAdjacent(p);
+                Point[] adjacent = getAdjacent(p);
                 for (Point adj : adjacent) {
-                    if (map.containsKey(adj) && (map.get(adj).equals('R') || map.get(adj).equals('.') || map.get(adj).equals(' '))) {
-                        map.put(adj, 'O');
+                    if (map.containsKey(adj) && !map.get(adj).equals(TILE_WALL)) {
+                        map.put(adj, TILE_OXYGEN);
                     }
                 }
             }
@@ -64,19 +96,19 @@ public class Aoc15 {
 
     private boolean isFilled() {
         for (Character c : map.values()) {
-            if (c.equals('.')) {
+            if (c.equals(TILE_KNOWN)) {
                 return false;
             }
         }
         return true;
     }
 
-    private static List<Point> getAdjacent(Point p) {
-        List<Point> result = new ArrayList<>();
-        result.add(new Point(p.x + 1, p.y));
-        result.add(new Point(p.x - 1, p.y));
-        result.add(new Point(p.x, p.y + 1));
-        result.add(new Point(p.x, p.y - 1));
+    public static Point[] getAdjacent(Point p) {
+        Point[] result = new Point[4];
+        result[NORTH] = new Point(p.x, p.y + 1);
+        result[SOUTH] = new Point(p.x, p.y - 1);
+        result[WEST] = new Point(p.x - 1, p.y);
+        result[EAST] = new Point(p.x + 1, p.y);
         return result;
     }
 
@@ -149,29 +181,42 @@ public class Aoc15 {
             List<Character> row = lines.get(i);
             StringBuilder sb = new StringBuilder();
             for (Character c : row) {
-                sb.append(c);
+                sb.append(colorize(c));
             }
             System.out.println(sb);
         }
     }
 
-    private static class RepairBot implements Runnable {
-        private int x, y;
-        private int dir = 1;
-        private ArrayBlockingQueue<Long> input, output;
-        long step = 0;
-        private final Random rn = new Random();
-        private final Stack<Point> log = new Stack();
-        private Point oxygenPos;
-        private final IntComputer cpu;
+    private static String colorize(Character c) {
+        if (c == TILE_OXYGEN) {
+            return ANSI_BLUE_BACKGROUND + " " + ANSI_RESET;
+        } else if (c == TILE_OXYGEN_GEN) {
+            return ANSI_RED + "X" + ANSI_RESET;
+        } else if (c == TILE_KNOWN) {
+            return ANSI_GREEN_BACKGROUND + " " + ANSI_RESET;
+        }
+        else {
+            return c.toString();
+        }
+    }
 
-        RepairBot(Long[] code, int x, int y) {
+    private static class RepairBot implements Runnable {
+        private final SearchStrategy strategy;
+        private final Stack<Point> log = new Stack<>();
+        private final IntComputer cpu;
+        private ArrayBlockingQueue<Long> input, output;
+        private Point pos;
+        private int dir = 1;
+        long step = 0;
+        private Point oxygenPos;
+
+        RepairBot(Long[] code, Point start, SearchStrategy strategy) {
             this.input = new ArrayBlockingQueue<>(10000);
             this.output = new ArrayBlockingQueue<>(10000);
             cpu = new IntComputer(code, output, input);
-            this.x = x;
-            this.y = y;
-            map.put(new Point(x, y), 'R');
+            pos = start;
+            this.strategy = strategy;
+            map.put(pos, TILE_ROBOT);
         }
 
         @Override
@@ -186,44 +231,43 @@ public class Aoc15 {
                     if (step % 100 == 0) {
                         printMap(map);
                     }
-                    Point currPos = new Point(x, y);
-                    if (log.contains(currPos)) {
-                        while (!log.pop().equals(currPos)) {
-                            // Do nothing, we just want to pop the items.
-                        }
-                    }
-                    log.push(currPos);
-
-                    output.put((long) dir); // Send dir
+                    logPosition();
+                    output.put((long) dir);
                     Long status = input.poll(5, TimeUnit.SECONDS);
-                    int nextDir = randInput();//getInput();
                     if (status == null) {
                         return;
                     } else if (status == 0) {
-                        updateMap('█');
+                        addToMap(TILE_WALL);
                     } else if (status == 1) {
                         move();
                     } else if (status == 2) {
-                        updateMap('X');
-                        oxygenPos = find(map, 'X').get(0);
                         display[1] = (long) log.size();
-                        display[3] = 1L;
+                        display[3] = MODE_MAP;
+                        addToMap(TILE_OXYGEN_GEN);
                         move();
+                        oxygenPos = pos;
                     }
-                    dir = nextDir;
-
+                    dir = strategy.getNext(pos, dir, map);
                 }
             } catch (Throwable t) {
                 throw new RuntimeException(t);
             }
         }
 
+        private void logPosition() {
+            if (log.contains(pos)) {
+                //noinspection StatementWithEmptyBody
+                while (!log.pop().equals(pos)) { }
+            }
+            log.push(pos);
+        }
+
         private boolean mapKnown() {
             boolean hasExplored = false;
             for (Point p : map.keySet()) {
-                if (Character.valueOf('.').equals(map.get(p)) || Character.valueOf('R').equals(map.get(p))) {
+                if (Character.valueOf(TILE_KNOWN).equals(map.get(p)) || Character.valueOf(TILE_ROBOT).equals(map.get(p))) {
                     hasExplored = true;
-                    List<Point> adjacent = getAdjacent(p);
+                    Point[] adjacent = getAdjacent(p);
                     for (Point adj : adjacent) {
                         Character adjChar = map.get(adj);
                         if (adjChar == null || Character.valueOf(' ').equals(adjChar)) {
@@ -235,41 +279,37 @@ public class Aoc15 {
             return hasExplored;
         }
 
-        private int randInput() {
-            return rn.nextInt(4) + 1;
-        }
-
-        private void updateMap(char tile) {
+        private void addToMap(char tile) {
             if (dir == 1) {
-                map.put(new Point(x, y + 1), tile);
+                map.put(new Point(pos.x, pos.y + 1), tile);
             } else if (dir == 2) {
-                map.put(new Point(x, y - 1), tile);
+                map.put(new Point(pos.x, pos.y - 1), tile);
             } else if (dir == 3) {
-                map.put(new Point(x - 1, y), tile);
+                map.put(new Point(pos.x - 1, pos.y), tile);
             } else if (dir == 4) {
-                map.put(new Point(x + 1, y), tile);
+                map.put(new Point(pos.x + 1, pos.y), tile);
             }
         }
 
         private void move() {
-            map.remove(new Point(x, y));
-            if (x == 0 && y == 0) {
-                map.put(new Point(x, y), 'S');
-            } else if (oxygenPos != null && x == oxygenPos.x && y == oxygenPos.y) {
-                map.put(new Point(x, y), 'X');
+            map.remove(pos);
+            if (pos.x == 0 && pos.y == 0) {
+                map.put(pos, 'S');
+            } else if (oxygenPos != null && pos.x == oxygenPos.x && pos.y == oxygenPos.y) {
+                map.put(pos, 'X');
             } else {
-                map.put(new Point(x, y), '.');
+                map.put(pos, TILE_KNOWN);
             }
             if (dir == 1) {
-                this.y++;
+                pos = new Point(pos.x, pos.y + 1);
             } else if (dir == 2) {
-                this.y--;
+                pos = new Point(pos.x, pos.y - 1);
             } else if (dir == 3) {
-                this.x--;
+                pos = new Point(pos.x - 1, pos.y);
             } else if (dir == 4) {
-                this.x++;
+                pos = new Point(pos.x + 1, pos.y);
             }
-            map.put(new Point(x, y), 'R');
+            map.put(pos, TILE_ROBOT);
         }
     }
 }
