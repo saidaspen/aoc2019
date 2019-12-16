@@ -14,6 +14,28 @@ import java.util.concurrent.TimeUnit;
 
 public class Aoc15 {
 
+    public final static int NORTH = 0;
+    public final static int SOUTH = 1;
+    public final static int WEST = 2;
+    public final static int EAST = 3;
+    public static final String ANSI_RESET = "\u001B[0m";
+    public static final String ANSI_BLACK = "\u001B[30m";
+    public static final String ANSI_RED = "\u001B[31m";
+    public static final String ANSI_GREEN = "\u001B[32m";
+    public static final String ANSI_YELLOW = "\u001B[33m";
+    public static final String ANSI_BLUE = "\u001B[34m";
+    public static final String ANSI_PURPLE = "\u001B[35m";
+    public static final String ANSI_CYAN = "\u001B[36m";
+    public static final String ANSI_WHITE = "\u001B[37m";
+    public static final String ANSI_BLACK_BACKGROUND = "\u001B[40m";
+    public static final String ANSI_RED_BACKGROUND = "\u001B[41m";
+    public static final String ANSI_GREEN_BACKGROUND = "\u001B[42m";
+    public static final String ANSI_YELLOW_BACKGROUND = "\u001B[43m";
+    public static final String ANSI_BLUE_BACKGROUND = "\u001B[44m";
+    public static final String ANSI_PURPLE_BACKGROUND = "\u001B[45m";
+    public static final String ANSI_CYAN_BACKGROUND = "\u001B[46m";
+    public static final String ANSI_WHITE_BACKGROUND = "\u001B[47m";
+
     private static final boolean PRINT = true;
     static final Character TILE_WALL = '█';
     static final Character TILE_OXYGEN_GEN = 'X';
@@ -59,7 +81,7 @@ public class Aoc15 {
             Thread.sleep(20L);
             oxygenPoints = find(map, TILE_OXYGEN);
             for (Point p : oxygenPoints) {
-                List<Point> adjacent = getAdjacent(p);
+                Point[] adjacent = getAdjacent(p);
                 for (Point adj : adjacent) {
                     if (map.containsKey(adj) && !map.get(adj).equals(TILE_WALL)) {
                         map.put(adj, TILE_OXYGEN);
@@ -81,12 +103,12 @@ public class Aoc15 {
         return true;
     }
 
-    public static List<Point> getAdjacent(Point p) {
-        List<Point> result = new ArrayList<>();
-        result.add(new Point(p.x + 1, p.y));
-        result.add(new Point(p.x - 1, p.y));
-        result.add(new Point(p.x, p.y + 1));
-        result.add(new Point(p.x, p.y - 1));
+    public static Point[] getAdjacent(Point p) {
+        Point[] result = new Point[4];
+        result[NORTH] = new Point(p.x, p.y + 1);
+        result[SOUTH] = new Point(p.x, p.y - 1);
+        result[WEST] = new Point(p.x - 1, p.y);
+        result[EAST] = new Point(p.x + 1, p.y);
         return result;
     }
 
@@ -159,9 +181,22 @@ public class Aoc15 {
             List<Character> row = lines.get(i);
             StringBuilder sb = new StringBuilder();
             for (Character c : row) {
-                sb.append(c);
+                sb.append(colorize(c));
             }
             System.out.println(sb);
+        }
+    }
+
+    private static String colorize(Character c) {
+        if (c == TILE_OXYGEN) {
+            return ANSI_BLUE_BACKGROUND + " " + ANSI_RESET;
+        } else if (c == TILE_OXYGEN_GEN) {
+            return ANSI_RED + "X" + ANSI_RESET;
+        } else if (c == TILE_KNOWN) {
+            return ANSI_GREEN_BACKGROUND + " " + ANSI_RESET;
+        }
+        else {
+            return c.toString();
         }
     }
 
@@ -232,7 +267,7 @@ public class Aoc15 {
             for (Point p : map.keySet()) {
                 if (Character.valueOf(TILE_KNOWN).equals(map.get(p)) || Character.valueOf(TILE_ROBOT).equals(map.get(p))) {
                     hasExplored = true;
-                    List<Point> adjacent = getAdjacent(p);
+                    Point[] adjacent = getAdjacent(p);
                     for (Point adj : adjacent) {
                         Character adjChar = map.get(adj);
                         if (adjChar == null || Character.valueOf(' ').equals(adjChar)) {
