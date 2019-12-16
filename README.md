@@ -40,12 +40,11 @@ Some days there is no direct input to the puzzle, or the input is a number or tw
 * Day 19
 * Day 18
 * Day 17
-* Day 16
-* Day 15
-* Day 14
-* Day 13
-* Day 12
-* [Day 12: The N-Body Problem](https://adventofcode.com/2019/day/11) - Solutions [Java](https://github.com/saidaspen/aoc2019/blob/master/java/src/se/saidaspen/aoc2019/aoc12/Aoc12.java), Rust
+* [Day 16: Flawed Frequency Transmission](https://adventofcode.com/2019/day/16) - Solutions [Java](https://github.com/saidaspen/aoc2019/blob/master/java/src/se/saidaspen/aoc2019/aoc16/Aoc16.java), Rust
+* [Day 15: Oxygen System](https://adventofcode.com/2019/day/15) - Solutions [Java](https://github.com/saidaspen/aoc2019/blob/master/java/src/se/saidaspen/aoc2019/aoc15/Aoc15.java), Rust
+* [Day 14: Space Stoichiometry](https://adventofcode.com/2019/day/14) - Solutions [Java](https://github.com/saidaspen/aoc2019/blob/master/java/src/se/saidaspen/aoc2019/aoc14/Aoc14.java), Rust
+* [Day 13: Care Package](https://adventofcode.com/2019/day/13) - Solutions [Java](https://github.com/saidaspen/aoc2019/blob/master/java/src/se/saidaspen/aoc2019/aoc13/Aoc13.java), Rust
+* [Day 12: The N-Body Problem](https://adventofcode.com/2019/day/12) - Solutions [Java](https://github.com/saidaspen/aoc2019/blob/master/java/src/se/saidaspen/aoc2019/aoc12/Aoc12.java), Rust
 * [Day 11:Day 11: Space Police](https://adventofcode.com/2019/day/11) - Solutions [Java](https://github.com/saidaspen/aoc2019/blob/master/java/src/se/saidaspen/aoc2019/aoc11/Aoc11.java), Rust
 * [Day 10: Monitoring Station](https://adventofcode.com/2019/day/10) - Solutions [Java](https://github.com/saidaspen/aoc2019/blob/master/java/src/se/saidaspen/aoc2019/aoc10/Aoc10.java), Rust
 * [Day 9: Sensor Boost](https://adventofcode.com/2019/day/9) - Solutions : [Java](https://github.com/saidaspen/aoc2019/tree/master/java/src/se/saidaspen/aoc2019/aoc09), Rust
