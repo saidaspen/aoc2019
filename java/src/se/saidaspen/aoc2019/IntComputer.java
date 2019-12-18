@@ -1,11 +1,15 @@
-package se.saidaspen.aoc2019.aoc09;
+package se.saidaspen.aoc2019;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import static se.saidaspen.aoc2019.IntComputer.Status.*;
+
 public final class IntComputer implements Runnable {
+
+    public enum Status {RUNNING, WAITING, HALTED}
 
     private final Map<Integer, Long> memory;
     private final BlockingQueue<Long> in, out;
@@ -13,6 +17,7 @@ public final class IntComputer implements Runnable {
 
     private int pc = 0;     // Program Counter
     private Long rbo = 0L;  // Relative Base Offset
+    private Status status = HALTED;
 
     public IntComputer(Long[] code, BlockingQueue<Long> in, BlockingQueue<Long> out) {
         memory = new HashMap<>(code.length);
@@ -24,6 +29,7 @@ public final class IntComputer implements Runnable {
     }
 
     public void run() {
+        status = RUNNING;
         try {
             while(load(pc) != /*HALT*/ 99){
                 var cmd = String.format("%05d", load(pc));
@@ -32,6 +38,7 @@ public final class IntComputer implements Runnable {
                 pAddrs[1] = getParam(cmd, 2); // Param 2
                 pAddrs[2] = getParam(cmd, 3); // Param 3
                 if (opCode == /*INPUT*/ 3) {
+                    status = WAITING;
                     store(pAddrs[0], in.poll(5L, TimeUnit.SECONDS));
                     pc += 2;
                 } else if (opCode == /*OUTPUT*/ 4) {
@@ -60,6 +67,8 @@ public final class IntComputer implements Runnable {
             }
         } catch (Throwable t) {
             throw new RuntimeException(t);
+        } finally {
+            status = HALTED;
         }
     }
 
@@ -74,4 +83,8 @@ public final class IntComputer implements Runnable {
 
     private Long load(int loc) { return memory.computeIfAbsent(loc, (x) -> 0L); }
     private void store(int loc, Long val) { memory.put(loc, val); }
+
+    public Status status() {
+        return status;
+    }
 }

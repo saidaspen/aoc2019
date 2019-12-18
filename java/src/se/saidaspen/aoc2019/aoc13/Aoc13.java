@@ -1,13 +1,10 @@
 package se.saidaspen.aoc2019.aoc13;
 
-import se.saidaspen.aoc2019.aoc03.Point;
-import se.saidaspen.aoc2019.aoc09.IntComputer;
+import se.saidaspen.aoc2019.IntComputer;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;

@@ -1,7 +1,7 @@
 package se.saidaspen.aoc2019.aoc09;
 
 import org.junit.Test;
-import se.saidaspen.aoc2019.aoc09.IntComputer;
+import se.saidaspen.aoc2019.IntComputer;
 
 import java.util.Arrays;
 import java.util.concurrent.ArrayBlockingQueue;

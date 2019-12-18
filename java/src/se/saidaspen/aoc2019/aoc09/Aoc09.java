@@ -1,5 +1,7 @@
 package se.saidaspen.aoc2019.aoc09;
 
+import se.saidaspen.aoc2019.IntComputer;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;

@@ -1,7 +1,7 @@
 package se.saidaspen.aoc2019.aoc15;
 
 import se.saidaspen.aoc2019.aoc03.Point;
-import se.saidaspen.aoc2019.aoc09.IntComputer;
+import se.saidaspen.aoc2019.IntComputer;
 
 import java.io.IOException;
 import java.nio.file.Files;
