@@ -5,7 +5,7 @@
 
 package se.saidaspen.aoc2019.aoc18;
 
-import se.saidaspen.aoc2019.aoc03.Point;
+import se.saidaspen.aoc2019.Point;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -61,10 +61,10 @@ public class Aoc18 {
         for (int row = 0; row < lines.length; row++) {
             char[] chars = lines[row].toCharArray();
             for (int col = 0; col < chars.length; col++) {
-                map.put(new Point(col, row), chars[col]);
+                map.put(Point.of(col, row), chars[col]);
             }
         }
-        poi = new HashMap<Character, Point>();
+        poi = new HashMap<>();
         doors = findAllDoors(map);
         keys = findAllKeys(map);
         poi.putAll(doors);
@@ -85,7 +85,7 @@ public class Aoc18 {
         }
         for (Point p : nodes.keySet()) {
             TreeNode node = nodes.get(p);
-            Point[] adjacent = getAdjacent(p);
+            Point[] adjacent = p.getAdjacent();
             for (Point adj : adjacent) {
                 if (adj != null && Character.valueOf('.').equals(cleanMap.get(adj))) {
                     node.addNeighbour(nodes.get(adj));
@@ -99,16 +99,16 @@ public class Aoc18 {
         return null;
     }
 
-    private static class TreeNode<Point> {
-        private Point data;
-        private List<TreeNode<Point>> neighbours;
+    private static class TreeNode<T> {
+        private T data;
+        private List<TreeNode<T>> neighbours;
 
-        public TreeNode(Point data) {
+        TreeNode(T data) {
             this.data = data;
             this.neighbours = new LinkedList<>();
         }
 
-        public void addNeighbour(TreeNode<Point> n) {
+        void addNeighbour(TreeNode<T> n) {
             this.neighbours.add(n);
         }
     }
@@ -198,7 +198,7 @@ public class Aoc18 {
                 }
             }
             visited.push(pos);
-            Point[] adjacentPoints = getAdjacent(pos);
+            Point[] adjacentPoints = pos.getAdjacent();
             List<Point> candidates = new ArrayList<>(4);
             for (Point p : adjacentPoints) {
                 if (p != null) {
@@ -214,15 +214,6 @@ public class Aoc18 {
             step++;
         }
         return -1;
-    }
-
-    private static Point[] getAdjacent(Point p) {
-        Point[] result = new Point[4];
-        result[SOUTH] = new Point(p.x, p.y + 1);
-        result[NORTH] = new Point(p.x, p.y - 1);
-        result[WEST] = new Point(p.x - 1, p.y);
-        result[EAST] = new Point(p.x + 1, p.y);
-        return result;
     }
 
     private int quadant(Point p) {
