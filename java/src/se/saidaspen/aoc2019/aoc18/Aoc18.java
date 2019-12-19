@@ -1,61 +1,38 @@
-// Create a hashmap for all POIs
-// Clone the map and remove all POIs
-// Calculate the distance from between all POIs (locks, keys and start point) using BFS
-
-
 package se.saidaspen.aoc2019.aoc18;
-
-import se.saidaspen.aoc2019.Point;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
-import java.util.Stack;
-import java.util.stream.Collectors;
+import java.util.Objects;
+import java.util.Queue;
+
+import org.apache.commons.collections.map.HashedMap;
+
+import se.saidaspen.aoc2019.Point;
 
 public class Aoc18 {
-
-
-    public static final int TOP_LEFT = 1;
-    public static final int TOP_RIGHT = 2;
-    public static final int BOTTOM_LEFT = 3;
-    public static final int BOTTOM_RIGHT = 4;
-
-    private static final int NORTH = 0;
-    private static final int EAST = 1;
-    private static final int SOUTH = 2;
-    private static final int WEST = 3;
-    public static final int CENTER_LINES = 0;
 
     private final Map<Point, Character> map;
     private final char[] KEY_SYMBOLS = new char[]{'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'};
     private final char[] DOOR_SYMBOLS = new char[]{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'};
-    private static int largestX;
-    private static int largestY;
-    private final Random rnd = new Random();
-    private final boolean filterQuadrant;
-    private int maxSteps;
-
-    private Map<String, Integer> distances = new HashMap<>();
-    private final Map<Character, Point> doors;
     private final Map<Character, Point> keys;
+    private final Map<Point, Character> keysByPos = new HashMap<>();
+    private final Map<Point, Character> doorsByPos = new HashMap<>();
     private final HashMap<Character, Point> poi;
-
+    private int allKeys = 0;
 
     public static void main(String[] args) throws IOException {
         String input = new String(Files.readAllBytes(Paths.get(args[0])));
-        Aoc18 app = new Aoc18(input, false, 50_000);
+        Aoc18 app = new Aoc18(input);
     }
 
-    Aoc18(String input, boolean filterQuadrant, int maxSteps) {
-        this.filterQuadrant = filterQuadrant;
-        this.maxSteps = maxSteps;
+    Aoc18(String input) {
         map = new HashMap<>();
         String[] lines = input.split("\n");
         for (int row = 0; row < lines.length; row++) {
@@ -65,26 +42,38 @@ public class Aoc18 {
             }
         }
         poi = new HashMap<>();
-        doors = findAllDoors(map);
+        Map<Character, Point> doors = findAllDoors(map);
+        for (Map.Entry<Character, Point> entry : doors.entrySet()) {
+            doorsByPos.put(entry.getValue(), entry.getKey());
+        }
         keys = findAllKeys(map);
+        for (Character k : keys.keySet()) {
+            allKeys = allKeys | toInt(k);
+        }
+        for (Map.Entry<Character, Point> entry : keys.entrySet()) {
+            keysByPos.put(entry.getValue(), entry.getKey());
+        }
         poi.putAll(doors);
         poi.putAll(keys);
         poi.put('@', find(map, '@').get(0));
-        printMap(map);
     }
 
     public int part1() {
         HashMap<Point, Character> cleanMap = new HashMap<>(map);
+        // Clean up the map (remove all POIs)
         for (Point p : poi.values()) {
             cleanMap.put(p, '.');
         }
+        // Get all walkable tiles
         List<Point> openPoints = find(cleanMap, '.');
-        Map<Point, TreeNode> nodes = new HashMap<>();
+        Map<Point, Node> nodes = new HashMap<>();
+        // Create nodes
         for (Point p : openPoints) {
-            nodes.put(p, new TreeNode<>(p));
+            nodes.put(p, new Node(p));
         }
+        // Fill the nodes, setting the neighbouring nodes
         for (Point p : nodes.keySet()) {
-            TreeNode node = nodes.get(p);
+            Node node = nodes.get(p);
             Point[] adjacent = p.getAdjacent();
             for (Point adj : adjacent) {
                 if (adj != null && Character.valueOf('.').equals(cleanMap.get(adj))) {
@@ -92,144 +81,189 @@ public class Aoc18 {
                 }
             }
         }
-        return 0;
+        // Populate distances between all POIs
+        Map<Character, Map<Character, Requirement>> distances = populateDistances(nodes);
+
+        //Find best path
+        Trip shortest = getShortestPathToAllKeys(distances);
+        System.out.println("Shortest sequence: " + shortest.keys);
+        return shortest.distance;
     }
 
-    private TreeNode toTree(HashMap<Point, Character> cleanMap) {
-        return null;
+    private Trip getShortestPathToAllKeys(Map<Character, Map<Character, Requirement>> distances) {
+        Character startPoi = '@';
+        Map<Character, Requirement> possibles = distances.get(startPoi);
+        Queue<Trip> queue = new ArrayDeque<>();
+        queue.add(new Trip(startPoi, 0, 0));
+        Trip shortest = new Trip('@', 0, Integer.MAX_VALUE);
+        Map<Long, Integer> tested = new HashMap<>();
+        while (!queue.isEmpty()) {
+            Trip current = queue.remove();
+            if (isComplete(current.keys)) {
+                if (current.distance < shortest.distance) {
+                    shortest.distance = current.distance;
+                }
+                continue;
+            }
+            int currentKeys = current.keys;
+            if (!current.first.equals(startPoi)) {
+                currentKeys = currentKeys | toInt(current.first);
+            }
+            Long unique = identifierOf(current.first, currentKeys);
+            Integer testedVal = tested.get(unique);
+            if (testedVal != null) {
+                if (testedVal < current.distance)
+                    continue;
+            } else {
+                tested.put(unique, current.distance);
+            }
+            for (Map.Entry<Character, Requirement> to : possibles.entrySet()) {
+                Requirement requirement = distances.get(current.first).get(to.getKey());
+                if (requirement == null) {
+                    continue;
+                }
+                int distForNext = current.distance + requirement.dist;
+                if (distForNext > shortest.distance
+                        || to.getKey().equals('@')
+                        || current.first.equals(to.getKey())
+                        || contains(current.keys, to.getKey())
+                        || contains(requirement.keysOnTheWay, to.getKey())) {
+                    continue;
+                }
+
+                boolean haveKeysRequired = hasAllKeys(currentKeys, to.getValue().requiredKeys);
+                //Boolean haveKeysRequired = to.getValue().requiredKeys.parallelStream().map(k -> currentKeys.contains(k.toString())).reduce(true, (a, b) -> a && b);
+                if (haveKeysRequired) {
+                    queue.add(new Trip(to.getKey(), add(currentKeys, to.getKey()), distForNext));
+                }
+            }
+        }
+        return shortest;
     }
 
-    private static class TreeNode<T> {
-        private T data;
-        private List<TreeNode<T>> neighbours;
+    private int add(int currentKeys, Character key) {
+        return currentKeys | toInt(key);
+    }
 
-        TreeNode(T data) {
+    private int toInt(Character c) {
+        return 1 << c - 'a';
+    }
+
+    private boolean contains(int keys, Character key) {
+        return (keys & toInt(key)) > 0;
+    }
+
+    private Long identifierOf(Character first, int keys) {
+        long val = 1 << ((first - 'a') + 40);
+        val = val | keys;
+        return val;
+    }
+
+    private boolean hasAllKeys(int listOfKeys, int keys) {
+        return (listOfKeys & keys) == keys;
+    }
+
+    private boolean isComplete(int listOfKeys) {
+        return hasAllKeys(listOfKeys, allKeys);
+    }
+
+    private Map<Character, Map<Character, Requirement>> populateDistances(Map<Point, Node> nodes) {
+        Map<Character, Map<Character, Requirement>> distances = new HashedMap();
+        List<Character> pois = new ArrayList<>(this.keys.keySet());
+        pois.add('@');
+        for (Character a : pois) {
+            for (Character b : pois) {
+                if (a.equals(b)) {
+                    continue;
+                }
+                distances.putIfAbsent(a, new HashMap<>());
+                distances.putIfAbsent(b, new HashMap<>());
+                Map<Character, Requirement> aDistances = distances.get(a);
+                Map<Character, Requirement> bDistances = distances.get(b);
+                if (!aDistances.containsKey(b)) {
+                    Requirement distance = getDistance(nodes, a, b);
+                    aDistances.put(b, distance);
+                    bDistances.put(a, distance);
+                }
+            }
+        }
+
+        for (Character from : distances.keySet()) {
+            Map<Character, Requirement> fDistances = distances.get(from);
+            for (Character to : fDistances.keySet()) {
+                System.out.printf("Distance between %s->%s=%s\n", from, to, fDistances.get(to));
+            }
+        }
+        return distances;
+    }
+
+    //BFS to find distances between to POIs
+    private Requirement getDistance(Map<Point, Node> nodes, Character from, Character to) {
+        Point currPoint = poi.get(from);
+        Node currNode = nodes.get(currPoint);
+        Point toPoint = poi.get(to);
+        List<Point> visited = new ArrayList<>();
+        Map<Node, Requirement> requirements = new HashMap<>();
+        requirements.put(currNode, new Requirement(0, 0, 0));
+        Queue<Node> visitQueue = new ArrayDeque<>();
+        visitQueue.add(currNode);
+        while (!visitQueue.isEmpty()) {
+            Node thisNode = visitQueue.remove();
+            if (thisNode.data.equals(toPoint)) {
+                return requirements.get(thisNode);
+            }
+            Character door = doorsByPos.get(thisNode.data);
+            if (door != null) {
+                Character key = door.toString().toLowerCase().charAt(0);
+                Requirement req = requirements.get(thisNode);
+                req.requiredKeys = add(req.requiredKeys, key);
+            }
+            Character key = keysByPos.get(thisNode.data);
+            if (key != null && !key.equals(to) && !key.equals(from)) {
+                Requirement req = requirements.get(thisNode);
+                req.keysOnTheWay = add(req.keysOnTheWay, key);
+            }
+            visited.add(thisNode.data);
+            for (Node n : thisNode.neighbours) {
+                if (!visited.contains(n.data)) {
+                    Requirement parentReq = requirements.get(thisNode);
+                    requirements.put(n, new Requirement(parentReq.dist + 1, parentReq.requiredKeys, parentReq.keysOnTheWay));
+                    visitQueue.add(n);
+                }
+            }
+        }
+        return new Requirement(Integer.MAX_VALUE, 0, 0);
+    }
+
+    private static class Node {
+        private Point data;
+        private List<Node> neighbours;
+
+        Node(Point data) {
             this.data = data;
             this.neighbours = new LinkedList<>();
         }
 
-        void addNeighbour(TreeNode<T> n) {
+        void addNeighbour(Node n) {
             this.neighbours.add(n);
         }
-    }
 
-    public int part1Old() {
-        long before = System.nanoTime();
-        Map<Point, Character> mapClone = new HashMap<>(map);
-        List<MapObj> keys = findAllKeysOld(mapClone);
-        Map<Character, Point> doors = findAllDoors(mapClone);
-        List<String> results = new ArrayList<>();
-        findAllCombinations(doors, "", mapClone, results, keys.size());
-        int shortest = Integer.MAX_VALUE;
-        for (String path : results) {
-            shortest = Math.min(shortest, lengthOf(path));
+        @Override
+        public String toString() {
+            return "Node{" + data + '}';
         }
-        System.out.println("Took: " + ((System.nanoTime() - before) / 1_000_000_000) + "s");
-        return shortest;
-    }
 
-    private int lengthOf(String path) {
-        Map<Point, Character> mapClone = new HashMap<>(map);
-        for (Point p : doors.values()) {
-            mapClone.put(p, '.');
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Node node = (Node) o;
+            return data.equals(node.data);
         }
-        int length = 0;
-        for (char c : path.toCharArray()) {
-            Point pos = find(mapClone, '@').get(0);
-            Point target = keys.get(c);
-            length += stepsTo(mapClone, target, false);
-            mapClone.put(pos, '.');
-            mapClone.put(target, '@');
-        }
-        return length;
-    }
 
-    private void findAllCombinations(Map<Character, Point> doors, String startList, Map<Point, Character> m, List<String> results, int stopCrit) {
-        List<MapObj> keysToLookFor = findAllKeysOld(m);
-        ArrayList<MapObj> possibleKeys = possibleKeys(m, keysToLookFor);
-        for (MapObj k : possibleKeys) {
-            Point doorPos = doors.get(k.symbol.toString().toUpperCase().charAt(0));
-            m.put(k.pos, '.');
-            if (doorPos != null) {
-                m.put(doorPos, '.');
-            }
-            findAllCombinations(doors, startList + k.symbol, m, results, stopCrit);
-            m.put(k.pos, k.symbol);
-            if (doorPos != null) {
-                m.put(doorPos, k.symbol.toString().toUpperCase().charAt(0));
-            }
-        }
-        int length = startList.length();
-        if (length == stopCrit)
-            results.add(startList);
-    }
-
-    private ArrayList<MapObj> possibleKeys(Map<Point, Character> m, List<MapObj> keys) {
-        ArrayList<MapObj> possibleKeys = new ArrayList<>();
-        for (MapObj k : keys) {
-            int stepsToKey = stepsTo(m, k.pos, filterQuadrant);
-            if (stepsToKey > 0) {
-                possibleKeys.add(k);
-            }
-        }
-        return possibleKeys;
-    }
-
-    private int stepsTo(Map<Point, Character> map, Point target, boolean filterQuad) {
-        Map<Point, Character> mapClone = new HashMap<>(map);
-        Point startPos = find(mapClone, '@').get(0);
-        for (Point otherKeyPoint : keys.values()) {
-            if (!otherKeyPoint.equals(target) && !otherKeyPoint.equals(startPos) && !Character.valueOf('.').equals(mapClone.get(otherKeyPoint))) {
-                mapClone.put(otherKeyPoint, '#');
-            }
-        }
-        if (filterQuad) {
-            int keyQuadrant = quadant(target);
-            mapClone.keySet().stream().filter(p -> quadant(p) != keyQuadrant && quadant(p) != CENTER_LINES).forEach(p -> mapClone.put(p, '#'));
-        }
-        mapClone.put(startPos, '.');
-        int step = 0;
-        Stack<Point> visited = new Stack<>();
-        Point pos = startPos;
-        while (step < maxSteps) {
-            if (visited.contains(pos)) {
-                //noinspection StatementWithEmptyBody
-                while (!visited.pop().equals(pos)) {
-                }
-            }
-            visited.push(pos);
-            Point[] adjacentPoints = pos.getAdjacent();
-            List<Point> candidates = new ArrayList<>(4);
-            for (Point p : adjacentPoints) {
-                if (p != null) {
-                    if (p.equals(target)) {
-                        return visited.size();
-                    }
-                    if (!p.equals(visited.peek()) && Character.valueOf('.').equals(mapClone.get(p))) {
-                        candidates.add(p);
-                    }
-                }
-            }
-            pos = candidates.get(rnd.nextInt(candidates.size()));
-            step++;
-        }
-        return -1;
-    }
-
-    private int quadant(Point p) {
-        if (p == null) {
-            new Exception().printStackTrace();
-        }
-        if (p.x < largestX / 2 && p.y < largestY / 2) {
-            return TOP_LEFT;
-        } else if (p.x > largestX / 2 && p.y < largestY / 2) {
-            return TOP_RIGHT;
-        } else if (p.x < largestX / 2 && p.y > largestY / 2) {
-            return BOTTOM_LEFT;
-        } else if (p.x > largestX / 2 && p.y > largestY / 2) {
-            return BOTTOM_RIGHT;
-        } else {
-            return CENTER_LINES;
+        @Override
+        public int hashCode() {
+            return Objects.hash(data);
         }
     }
 
@@ -247,11 +281,6 @@ public class Aoc18 {
         return doorsMap;
     }
 
-    private List<MapObj> findAllKeysOld(Map<Point, Character> map) {
-        List<Point> keyPositions = find(map, KEY_SYMBOLS);
-        return keyPositions.stream().map(p -> new MapObj(p, map.get(p))).collect(Collectors.toList());
-    }
-
     private static List<Point> find(Map<Point, Character> map, char... chars) {
         List<Point> points = new ArrayList<>();
         for (Point p : map.keySet()) {
@@ -264,55 +293,32 @@ public class Aoc18 {
         return points;
     }
 
-    private static void printMap(Map<Point, Character> map) {
-        System.out.print("\033[2J"); // Clear screen
-        largestX = 0;
-        largestY = 0;
-        for (Point p : map.keySet()) {
-            largestX = Math.max(p.x, largestX);
-            largestY = Math.max(p.y, largestY);
-        }
-        List<List<Character>> lines = emptyLines(largestX, largestY);
-        for (Point p : map.keySet()) {
-            lines.get(p.y).set(p.x, map.get(p));
-        }
-        render(lines);
-    }
+    private static class Requirement {
+        private Integer dist;
+        private int requiredKeys;
+        private int keysOnTheWay;
 
-    private static List<List<Character>> emptyLines(int xMax, int yMax) {
-        List<List<Character>> lines = new ArrayList<>();
-        for (int row = 0; row <= yMax; row++) {
-            List<Character> r = new ArrayList<>();
-            for (int col = 0; col <= xMax; col++) {
-                r.add(' ');
-            }
-            lines.add(r);
-        }
-        return lines;
-    }
-
-    private static void render(List<List<Character>> lines) {
-        for (List<Character> row : lines) {
-            StringBuilder sb = new StringBuilder();
-            for (Character c : row) {
-                sb.append(c);
-            }
-            System.out.println(sb);
-        }
-    }
-
-    private static class MapObj {
-        Point pos;
-        Character symbol;
-
-        public MapObj(Point p, Character c) {
-            pos = p;
-            symbol = c;
+        public Requirement(Integer dist, int requiredKeys, int keysOnTheWay) {
+            this.dist = dist;
+            this.requiredKeys = requiredKeys;
+            this.keysOnTheWay = keysOnTheWay;
         }
 
+        @Override
         public String toString() {
-            return String.format("{%s:%s}", symbol, pos.toString());
+            return String.format("Requirement{dist=%s, required keys:%s", dist, requiredKeys);
         }
     }
 
+    private class Trip {
+        private final Character first;
+        private int keys;
+        private int distance;
+
+        public Trip(Character first, int keys, int distance) {
+            this.first = first;
+            this.keys = keys;
+            this.distance = distance;
+        }
+    }
 }
