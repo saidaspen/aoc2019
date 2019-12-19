@@ -41,8 +41,10 @@ public final class IntComputer implements Runnable {
                     status = WAITING;
                     store(pAddrs[0], in.poll(5L, TimeUnit.SECONDS));
                     pc += 2;
+                    status = RUNNING;
                 } else if (opCode == /*OUTPUT*/ 4) {
-                    out.put(load(pAddrs[0]));
+                    Long outputVal = load(pAddrs[0]);
+                    out.put(outputVal);
                     pc += 2;
                 } else if (opCode == /*ADJUST_RBO*/ 9) {
                     rbo += load(pAddrs[0]);
