@@ -1,7 +1,7 @@
 package se.saidaspen.aoc2019.aoc15;
 
-import se.saidaspen.aoc2019.aoc03.Point;
 import se.saidaspen.aoc2019.IntComputer;
+import se.saidaspen.aoc2019.Point;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -54,7 +54,7 @@ public class Aoc15 {
     public static void main(String[] args) throws IOException, InterruptedException {
         String input = new String(Files.readAllBytes(Paths.get(args[0])));
         Aoc15 aoc15 = new Aoc15(input);
-        RepairBot robot = new RepairBot(aoc15.code, new Point(0, 0), new WallSearch());
+        RepairBot robot = new RepairBot(aoc15.code, Point.of(0, 0), new WallSearch());
         ThreadPoolExecutor pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
         pool.execute(robot);
         pool.shutdown();
@@ -105,10 +105,10 @@ public class Aoc15 {
 
     public static Point[] getAdjacent(Point p) {
         Point[] result = new Point[4];
-        result[NORTH] = new Point(p.x, p.y + 1);
-        result[SOUTH] = new Point(p.x, p.y - 1);
-        result[WEST] = new Point(p.x - 1, p.y);
-        result[EAST] = new Point(p.x + 1, p.y);
+        result[NORTH] = Point.of(p.x, p.y + 1);
+        result[SOUTH] = Point.of(p.x, p.y - 1);
+        result[WEST] = Point.of(p.x - 1, p.y);
+        result[EAST] = Point.of(p.x + 1, p.y);
         return result;
     }
 
@@ -147,7 +147,7 @@ public class Aoc15 {
         } else if (display[3] == 2) {
             mode = "FILL OXYGEN";
         }
-        System.out.println("Mode: " + mode + "\t" + "Robot steps: " + display[0] + "\t"  + "Closest path: " + display[1] + "\t" + "Oxygen spread (s): " + display[2]);
+        System.out.println("Mode: " + mode + "\t" + "Robot steps: " + display[0] + "\t" + "Closest path: " + display[1] + "\t" + "Oxygen spread (s): " + display[2]);
     }
 
     private static List<List<Character>> emptyLines(int xMax, int yMax) {
@@ -171,7 +171,7 @@ public class Aoc15 {
             minY = Math.min(p.y, minY);
         }
         for (Point p : map.keySet()) {
-            outMap.put(new Point(p.x + Math.abs(minX), p.y + Math.abs(minY)), map.get(p));
+            outMap.put(Point.of(p.x + Math.abs(minX), p.y + Math.abs(minY)), map.get(p));
         }
         return outMap;
     }
@@ -194,8 +194,7 @@ public class Aoc15 {
             return ANSI_RED + "X" + ANSI_RESET;
         } else if (c == TILE_KNOWN) {
             return ANSI_GREEN_BACKGROUND + " " + ANSI_RESET;
-        }
-        else {
+        } else {
             return c.toString();
         }
     }
@@ -257,7 +256,8 @@ public class Aoc15 {
         private void logPosition() {
             if (log.contains(pos)) {
                 //noinspection StatementWithEmptyBody
-                while (!log.pop().equals(pos)) { }
+                while (!log.pop().equals(pos)) {
+                }
             }
             log.push(pos);
         }
@@ -281,13 +281,13 @@ public class Aoc15 {
 
         private void addToMap(char tile) {
             if (dir == 1) {
-                map.put(new Point(pos.x, pos.y + 1), tile);
+                map.put(Point.of(pos.x, pos.y + 1), tile);
             } else if (dir == 2) {
-                map.put(new Point(pos.x, pos.y - 1), tile);
+                map.put(Point.of(pos.x, pos.y - 1), tile);
             } else if (dir == 3) {
-                map.put(new Point(pos.x - 1, pos.y), tile);
+                map.put(Point.of(pos.x - 1, pos.y), tile);
             } else if (dir == 4) {
-                map.put(new Point(pos.x + 1, pos.y), tile);
+                map.put(Point.of(pos.x + 1, pos.y), tile);
             }
         }
 
@@ -301,13 +301,13 @@ public class Aoc15 {
                 map.put(pos, TILE_KNOWN);
             }
             if (dir == 1) {
-                pos = new Point(pos.x, pos.y + 1);
+                pos = Point.of(pos.x, pos.y + 1);
             } else if (dir == 2) {
-                pos = new Point(pos.x, pos.y - 1);
+                pos = Point.of(pos.x, pos.y - 1);
             } else if (dir == 3) {
-                pos = new Point(pos.x - 1, pos.y);
+                pos = Point.of(pos.x - 1, pos.y);
             } else if (dir == 4) {
-                pos = new Point(pos.x + 1, pos.y);
+                pos = Point.of(pos.x + 1, pos.y);
             }
             map.put(pos, TILE_ROBOT);
         }

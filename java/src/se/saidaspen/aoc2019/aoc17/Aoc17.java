@@ -1,17 +1,12 @@
 package se.saidaspen.aoc2019.aoc17;
 
-import se.saidaspen.aoc2019.aoc03.Point;
 import se.saidaspen.aoc2019.IntComputer;
+import se.saidaspen.aoc2019.Point;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Stack;
+import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -272,7 +267,7 @@ public class Aoc17 {
         int currDir = dir;
         Point next;
         while (true) {
-            Point[] adjacentPoints = getAdjacent(pos);
+            Point[] adjacentPoints = pos.getAdjacent();
             List<Point> candidates = new ArrayList<>(4);
             for (Point p : adjacentPoints) {
                 if (p != null) {
@@ -306,13 +301,13 @@ public class Aoc17 {
 
     private Point move(Point p, int currDir) {
         if (currDir == NORTH) {
-            return new Point(p.x, p.y - 1);
+            return Point.of(p.x, p.y - 1);
         } else if (currDir == EAST) {
-            return new Point(p.x + 1, p.y);
+            return Point.of(p.x + 1, p.y);
         } else if (currDir == SOUTH) {
-            return new Point(p.x, p.y + 1);
+            return Point.of(p.x, p.y + 1);
         } else if (currDir == WEST) {
-            return new Point(p.x - 1, p.y);
+            return Point.of(p.x - 1, p.y);
         } else {
             throw new RuntimeException("Unsupporte dir " + currDir);
         }
@@ -355,7 +350,7 @@ public class Aoc17 {
     private List<Point> crossings() {
         List<Point> crossings = new ArrayList<>();
         for (Point p : map.keySet()) {
-            Point[] adjacent = getAdjacent(p);
+            Point[] adjacent = p.getAdjacent();
             boolean crossing = true;
             if (!Character.valueOf('#').equals(map.get(p))) {
                 continue;
@@ -379,7 +374,7 @@ public class Aoc17 {
         Long output = out.poll(3, TimeUnit.SECONDS);
         while (output != null) {
             char c = (char) output.byteValue();
-            Point pos = new Point(currCol, currRow);
+            Point pos = Point.of(currCol, currRow);
             if (dirSymbols.contains(c)) {
                 dir = dirSymbols.indexOf(c);
                 startPos = pos;
@@ -404,15 +399,6 @@ public class Aoc17 {
             }
         }
         return points;
-    }
-
-    private static Point[] getAdjacent(Point p) {
-        Point[] result = new Point[4];
-        result[SOUTH] = new Point(p.x, p.y + 1);
-        result[NORTH] = new Point(p.x, p.y - 1);
-        result[WEST] = new Point(p.x - 1, p.y);
-        result[EAST] = new Point(p.x + 1, p.y);
-        return result;
     }
 
     private static void printMap(Map<Point, Character> map) {

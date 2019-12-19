@@ -1,6 +1,7 @@
 package se.saidaspen.aoc2019.aoc15;
 
-import se.saidaspen.aoc2019.aoc03.Point;
+
+import se.saidaspen.aoc2019.Point;
 
 import java.util.Map;
 import java.util.Random;

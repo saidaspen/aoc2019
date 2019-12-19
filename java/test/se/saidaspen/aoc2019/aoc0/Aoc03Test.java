@@ -1,8 +1,8 @@
 package se.saidaspen.aoc2019.aoc0;
 
 import org.junit.Test;
+import se.saidaspen.aoc2019.Point;
 import se.saidaspen.aoc2019.aoc03.Aoc03;
-import se.saidaspen.aoc2019.aoc03.Point;
 
 import java.util.List;
 

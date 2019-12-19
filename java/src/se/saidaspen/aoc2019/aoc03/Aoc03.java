@@ -1,5 +1,7 @@
 package se.saidaspen.aoc2019.aoc03;
 
+import se.saidaspen.aoc2019.Point;
+
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -17,7 +19,7 @@ import static java.util.stream.Collectors.toList;
 public class Aoc03 {
     // This specifies if we are running part 1 or part 2 of the problem
     private static boolean IS_PART1 = false;
-    private static final Point ORIGIN = new Point(0, 0);
+    private static final Point ORIGIN = Point.of(0, 0);
 
     public static void main(String[] args) throws IOException {
         List<List<Point>> wires = lines(Paths.get(args[0])).collect(toList()).stream()
@@ -71,7 +73,7 @@ public class Aoc03 {
     }
 
     private static Optional<Point> crosses(Point a, Point b, Point c, Point d) {
-        Point candidate = (a.x == b.x) ? new Point(a.x, c.y) : new Point(c.x, a.y);
+        Point candidate = (a.x == b.x) ? Point.of(a.x, c.y) : Point.of(c.x, a.y);
         return candidate.isOnLine(c, d) && candidate.isOnLine(a, b) ? Optional.of(candidate) : Optional.empty();
     }
 
@@ -83,13 +85,13 @@ public class Aoc03 {
             char dir = instr.charAt(0);
             int steps = Integer.parseInt(instr.substring(1));
             if (dir == 'D') {
-                currentPoint = new Point(currentPoint.x, currentPoint.y - steps);
+                currentPoint = Point.of(currentPoint.x, currentPoint.y - steps);
             } else if (dir == 'R') {
-                currentPoint = new Point(currentPoint.x + steps, currentPoint.y);
+                currentPoint = Point.of(currentPoint.x + steps, currentPoint.y);
             } else if (dir == 'U') {
-                currentPoint = new Point(currentPoint.x, currentPoint.y + steps);
+                currentPoint = Point.of(currentPoint.x, currentPoint.y + steps);
             } else if (dir == 'L') {
-                currentPoint = new Point(currentPoint.x - steps, currentPoint.y);
+                currentPoint = Point.of(currentPoint.x - steps, currentPoint.y);
             }
             points.add(currentPoint);
         }
