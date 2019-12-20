@@ -6,36 +6,34 @@ import static org.junit.Assert.*;
 
 public class Aoc20Test {
 
-
     @Test
-    public void part1Example1() throws Exception {
+    public void part2Example1() {
         String input =
                 "         A           \n" +
-                "         A           \n" +
-                "  #######.#########  \n" +
-                "  #######.........#  \n" +
-                "  #######.#######.#  \n" +
-                "  #######.#######.#  \n" +
-                "  #######.#######.#  \n" +
-                "  #####  B    ###.#  \n" +
-                "BC...##  C    ###.#  \n" +
-                "  ##.##       ###.#  \n" +
-                "  ##...DE  F  ###.#  \n" +
-                "  #####    G  ###.#  \n" +
-                "  #########.#####.#  \n" +
-                "DE..#######...###.#  \n" +
-                "  #.#########.###.#  \n" +
-                "FG..#########.....#  \n" +
-                "  ###########.#####  \n" +
-                "             Z       \n" +
-                "             Z       ";
+                        "         A           \n" +
+                        "  #######.#########  \n" +
+                        "  #######.........#  \n" +
+                        "  #######.#######.#  \n" +
+                        "  #######.#######.#  \n" +
+                        "  #######.#######.#  \n" +
+                        "  #####  B    ###.#  \n" +
+                        "BC...##  C    ###.#  \n" +
+                        "  ##.##       ###.#  \n" +
+                        "  ##...DE  F  ###.#  \n" +
+                        "  #####    G  ###.#  \n" +
+                        "  #########.#####.#  \n" +
+                        "DE..#######...###.#  \n" +
+                        "  #.#########.###.#  \n" +
+                        "FG..#########.....#  \n" +
+                        "  ###########.#####  \n" +
+                        "             Z       \n" +
+                        "             Z       ";
         Aoc20 app = new Aoc20(input);
-        assertEquals(23, app.run());
+        assertEquals(26, app.run());
     }
 
     @Test
-    public void
-    part2Example1() throws Exception {
+    public void part2Example2() {
         String input =
                 "             Z L X W       C                 \n" +
                 "             Z P Q B       K                 \n" +

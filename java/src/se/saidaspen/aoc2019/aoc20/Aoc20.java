@@ -1,5 +1,6 @@
 package se.saidaspen.aoc2019.aoc20;
 
+import lombok.Value;
 import se.saidaspen.aoc2019.Point;
 
 import java.io.IOException;
@@ -14,6 +15,17 @@ public final class Aoc20 {
     private final int height;
     private final Map<Point, Character> map = new HashMap<>();
     private final Map<Point, String> portals = new HashMap<>();
+    private static final Map<Position, List<Position>> nbrMemo = new HashMap<>();
+
+    @Value private static class Position {
+        private final Point point;
+        private final int level;
+    }
+
+    @Value private static class BfsNode {
+        private final Position pos;
+        private final int dist;
+    }
 
     public static void main(String[] args) throws IOException {
         String input = new String(Files.readAllBytes(Paths.get(args[0])));
@@ -48,8 +60,6 @@ public final class Aoc20 {
                     } else {
                         continue;
                     }
-                    assert portalLoc != null;
-                    assert !"".equals(portalName) && portalName.length() == 2;
                     portals.put(portalLoc, portalName);
                 } else if (c != ' ') {
                     map.put(Point.of(col, row), c);
@@ -58,61 +68,13 @@ public final class Aoc20 {
         }
     }
 
-    private static class Position {
-        private final Point point;
-        private final int level;
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            Position position = (Position) o;
-            return level == position.level &&
-                    Objects.equals(point, position.point);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(point, level);
-        }
-
-        Position(Point from, int i) {
-            point = from;
-            level = i;
-        }
-    }
-
-    private static class BfsNode {
-        Position pos;
-        int dist;
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            BfsNode position = (BfsNode) o;
-            return dist == position.dist &&
-                    Objects.equals(pos, position.pos);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(pos, dist);
-        }
-
-        BfsNode(Position pos, int i) {
-            this.pos = pos;
-            dist = i;
-        }
+    int run() {
+        // Fill the nodes, setting the neighbouring nodes
+        return getDistance(findPortal("AA").get(0).getKey(), findPortal("ZZ").get(0).getKey());
     }
 
     private boolean isChar(char c) {
         return c >= 'A' && c <= 'Z';
-    }
-
-    int run() {
-        // Fill the nodes, setting the neighbouring nodes
-        return getDistance(findPortal("AA").get(0).getKey(), findPortal("ZZ").get(0).getKey());
     }
 
     private int getDistance(Point from, Point to) {
@@ -137,8 +99,6 @@ public final class Aoc20 {
         return -1;
     }
 
-    private static final Map<Position, List<Position>> nbrMemo = new HashMap<>();
-
     private List<Position> getNeighbours(Position pos) {
         if (nbrMemo.containsKey(pos)) {
             return nbrMemo.get(pos);
@@ -154,7 +114,7 @@ public final class Aoc20 {
         String portal = portals.get(pos.point);
         if (portal != null && !"AA".equals(portal)) {
             int lvl;
-            if (pos.point.x <= 2 || pos.point.x >= width - 3 || pos.point.y <= 2 || pos.point.y == height - 3) {
+            if (isOuter(pos)) {
                 if (pos.level != 0)
                     lvl = pos.level - 1;
                 else {
@@ -173,6 +133,10 @@ public final class Aoc20 {
         }
         nbrMemo.put(pos, neighbours);
         return neighbours;
+    }
+
+    private boolean isOuter(Position pos) {
+        return pos.point.x <= 2 || pos.point.x >= width - 3 || pos.point.y <= 2 || pos.point.y == height - 3;
     }
 
     private List<Map.Entry<Point, String>> findPortal(String portalName) {
