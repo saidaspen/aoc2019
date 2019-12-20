@@ -1,8 +1,8 @@
 package se.saidaspen.aoc2019.aoc18;
 
-import static org.junit.Assert.*;
-
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 public class Aoc18Test {
 
@@ -11,7 +11,7 @@ public class Aoc18Test {
         String input = "#########\n" +
                 "#b.A.@.a#\n" +
                 "#########";
-        Aoc18 app = new Aoc18(input, false, 10_000);
+        Aoc18 app = new Aoc18(input);
         assertEquals(8, app.part1());
     }
 
@@ -23,7 +23,7 @@ public class Aoc18Test {
                         "######################.#\n" +
                         "#d.....................#\n" +
                         "########################";
-        Aoc18 app = new Aoc18(input, false, 10_000);
+        Aoc18 app = new Aoc18(input);
         assertEquals(86, app.part1());
     }
 
@@ -35,7 +35,7 @@ public class Aoc18Test {
                         "#.######################\n" +
                         "#.....@.a.B.c.d.A.e.F.g#\n" +
                         "########################";
-        Aoc18 app = new Aoc18(input, false, 10_000);
+        Aoc18 app = new Aoc18(input);
         assertEquals(132, app.part1());
     }
 
@@ -51,7 +51,7 @@ public class Aoc18Test {
                         "########.########\n" +
                         "#l.F..d...h..C.m#\n" +
                         "#################";
-        Aoc18 app = new Aoc18(input, false, 5_000);
+        Aoc18 app = new Aoc18(input);
         assertEquals(136, app.part1());
     }
 
@@ -64,8 +64,17 @@ public class Aoc18Test {
                 "###A#B#C################\n" +
                 "###g#h#i################\n" +
                 "########################";
-        Aoc18 app = new Aoc18(input, false, 10_000);
+        Aoc18 app = new Aoc18(input);
         assertEquals(81, app.part1());
     }
 
+
+    @Test
+    public void testid() {
+        long aVal = 1L << (('a' - 'a') + 32);
+        aVal = 1 << (('b' - 'a') + 32);
+        aVal = 1 << (('c' - 'a') + 32);
+        aVal = 1 << (('d' - 'a') + 32);
+        aVal = 1 << (('e' - 'a') + 32);
+    }
 }

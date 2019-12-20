@@ -11,8 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Queue;
-
-import org.apache.commons.collections.map.HashedMap;
+import java.util.logging.Logger;
 
 import se.saidaspen.aoc2019.Point;
 
@@ -82,7 +81,7 @@ public class Aoc18 {
             }
         }
         // Populate distances between all POIs
-        Map<Character, Map<Character, Requirement>> distances = populateDistances(nodes);
+        Map<Long, Requirement> distances = populateDistances(nodes);
 
         //Find best path
         Trip shortest = getShortestPathToAllKeys(distances);
@@ -90,11 +89,9 @@ public class Aoc18 {
         return shortest.distance;
     }
 
-    private Trip getShortestPathToAllKeys(Map<Character, Map<Character, Requirement>> distances) {
-        Character startPoi = '@';
-        Map<Character, Requirement> possibles = distances.get(startPoi);
+    private Trip getShortestPathToAllKeys(Map<Long, Requirement> distances) {
         Queue<Trip> queue = new ArrayDeque<>();
-        queue.add(new Trip(startPoi, 0, 0));
+        queue.add(new Trip('@', 0, 0));
         Trip shortest = new Trip('@', 0, Integer.MAX_VALUE);
         Map<Long, Integer> tested = new HashMap<>();
         while (!queue.isEmpty()) {
@@ -106,7 +103,7 @@ public class Aoc18 {
                 continue;
             }
             int currentKeys = current.keys;
-            if (!current.first.equals(startPoi)) {
+            if (!current.first.equals('@')) {
                 currentKeys = currentKeys | toInt(current.first);
             }
             Long unique = identifierOf(current.first, currentKeys);
@@ -117,7 +114,10 @@ public class Aoc18 {
             } else {
                 tested.put(unique, current.distance);
             }
-            for (Map.Entry<Character, Requirement> to : possibles.entrySet()) {
+            for (Map.Entry<Long, Requirement> to : distances.entrySet()) {
+                if  ((to.getKey() & 0xFFFF0000L >> 32) != toInt(current.first){
+
+                }
                 Requirement requirement = distances.get(current.first).get(to.getKey());
                 if (requirement == null) {
                     continue;
@@ -154,7 +154,7 @@ public class Aoc18 {
     }
 
     private Long identifierOf(Character first, int keys) {
-        long val = 1 << ((first - 'a') + 40);
+        long val = 1L << ((first - 'a') + 32);
         val = val | keys;
         return val;
     }
@@ -167,8 +167,8 @@ public class Aoc18 {
         return hasAllKeys(listOfKeys, allKeys);
     }
 
-    private Map<Character, Map<Character, Requirement>> populateDistances(Map<Point, Node> nodes) {
-        Map<Character, Map<Character, Requirement>> distances = new HashedMap();
+    private Map<Long, Requirement> populateDistances(Map<Point, Node> nodes) {
+        Map<Long, Requirement> distances = new HashMap<>();
         List<Character> pois = new ArrayList<>(this.keys.keySet());
         pois.add('@');
         for (Character a : pois) {
@@ -176,22 +176,13 @@ public class Aoc18 {
                 if (a.equals(b)) {
                     continue;
                 }
-                distances.putIfAbsent(a, new HashMap<>());
-                distances.putIfAbsent(b, new HashMap<>());
-                Map<Character, Requirement> aDistances = distances.get(a);
-                Map<Character, Requirement> bDistances = distances.get(b);
-                if (!aDistances.containsKey(b)) {
+                long placeA = ((long) toInt(a)) << 32;
+                long placeB = toInt(a);
+                if (!distances.containsKey(placeA|placeB)) {
                     Requirement distance = getDistance(nodes, a, b);
-                    aDistances.put(b, distance);
-                    bDistances.put(a, distance);
+                    distances.put(placeA|placeB, distance);
+                    distances.put(placeB|placeA, distance);
                 }
-            }
-        }
-
-        for (Character from : distances.keySet()) {
-            Map<Character, Requirement> fDistances = distances.get(from);
-            for (Character to : fDistances.keySet()) {
-                System.out.printf("Distance between %s->%s=%s\n", from, to, fDistances.get(to));
             }
         }
         return distances;
