@@ -5,15 +5,12 @@ import se.saidaspen.aoc2019.IntComputer;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 public class Aoc21 {
 
-    private final Long[] code;
+    private String input;
 
     public static void main(String[] args) throws IOException, InterruptedException {
         String input = new String(Files.readAllBytes(Paths.get(args[0])));
@@ -22,11 +19,19 @@ public class Aoc21 {
     }
 
     Aoc21(String input) {
-        code = Arrays.stream(input.split(","))
-                .map(String::trim)
-                .mapToLong(Long::parseLong)
-                .boxed()
-                .toArray(Long[]::new);
+        this.input = input;
+    }
+
+    @SuppressWarnings("unused")
+    private void part1() throws InterruptedException {
+        String program = "NOT A J\n" +
+                "NOT B T\n" +
+                "OR T J\n" +
+                "NOT C T\n" +
+                "OR T J\n" +
+                "AND D J\n" +
+                "WALK\n";
+        run(program);
     }
 
     void part2() throws InterruptedException {
@@ -44,35 +49,20 @@ public class Aoc21 {
         run(program);
     }
 
-    private void part1() throws InterruptedException {
-        String program = "NOT A J\n" +
-                        "NOT B T\n" +
-                        "OR T J\n" +
-                        "NOT C T\n" +
-                        "OR T J\n" +
-                        "AND D J\n" +
-                        "WALK\n";
-        run(program);
-    }
-
     private void run(String program) throws InterruptedException {
-        ArrayBlockingQueue<Long> in = new ArrayBlockingQueue<>(1);
-        ArrayBlockingQueue<Long> out = new ArrayBlockingQueue<>(10000);
-        IntComputer cpu = new IntComputer(code, in, out);
-        ThreadPoolExecutor pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
-        pool.execute(cpu);
+        IntComputer cpu = new IntComputer(input);
+        Thread t = new Thread(cpu);
+        t.start();
         waitForCpu(cpu);
-        printOutput(out);
+        printOutput(cpu.out());
         for (char c : program.toCharArray()) {
-            in.put((long) (int) c);
+            cpu.send((int) c);
         }
         waitForCpu(cpu);
-        printOutput(out);
-        pool.shutdown();
-        pool.awaitTermination(100L, TimeUnit.SECONDS);
+        printOutput(cpu.out());
     }
 
-    private void printOutput(ArrayBlockingQueue<Long> out) throws InterruptedException {
+    private void printOutput(BlockingQueue<Long> out) throws InterruptedException {
         Long outVal = out.poll(5, TimeUnit.DAYS);
         while (outVal != null) {
             char c = (char) outVal.byteValue();

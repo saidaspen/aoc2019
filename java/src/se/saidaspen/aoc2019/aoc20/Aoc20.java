@@ -15,7 +15,7 @@ public final class Aoc20 {
     private final int height;
     private final Map<Point, Character> map = new HashMap<>();
     private final Map<Point, String> portals = new HashMap<>();
-    private static final Map<Position, List<Position>> nbrMemo = new HashMap<>();
+    private final Map<Position, List<Position>> nbrMemo = new HashMap<>();
 
     @Value private static class Position {
         private final Point point;

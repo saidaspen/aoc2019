@@ -1,7 +1,9 @@
 package se.saidaspen.aoc2019;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -26,6 +28,20 @@ public final class IntComputer implements Runnable {
         }
         this.in = in;
         this.out = out;
+    }
+
+    public IntComputer(String codeStr) {
+        Long[] code = Arrays.stream(codeStr.split(","))
+                .map(String::trim)
+                .mapToLong(Long::parseLong)
+                .boxed()
+                .toArray(Long[]::new);
+        memory = new HashMap<>(code.length);
+        for (int i = 0; i < code.length; i++) {
+            memory.put(i, code[i]);
+        }
+        this.in = new ArrayBlockingQueue<>(10_000);
+        this.out = new ArrayBlockingQueue<>(10_000);
     }
 
     public void run() {
@@ -86,5 +102,13 @@ public final class IntComputer implements Runnable {
 
     public Status status() {
         return status;
+    }
+
+    public void send(long c) throws InterruptedException {
+        in.put(c);
+    }
+
+    public BlockingQueue<Long> out() {
+        return out;
     }
 }
