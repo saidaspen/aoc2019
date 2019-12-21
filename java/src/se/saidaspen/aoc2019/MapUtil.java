@@ -21,7 +21,6 @@ public class MapUtil {
         render(lines);
     }
 
-
     private static List<List<Character>> emptyLines(int xMax, int yMax) {
         List<List<Character>> lines = new ArrayList<>();
         for (int row = 0; row <= yMax; row++) {
