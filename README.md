@@ -35,11 +35,11 @@ Some days there is no direct input to the puzzle, or the input is a number or tw
 * Day 24
 * Day 23
 * Day 22
-* Day 21
-* Day 20
-* Day 19
-* Day 18
-* Day 17
+* [Day 21: Springdroid Adventure](https://adventofcode.com/2019/day/21) - Solutions [Java](https://github.com/saidaspen/aoc2019/blob/master/java/src/se/saidaspen/aoc2019/aoc21/Aoc21.java), Rust
+* [Day 20: Donut Maze](https://adventofcode.com/2019/day/20) - Solutions [Java](https://github.com/saidaspen/aoc2019/blob/master/java/src/se/saidaspen/aoc2019/aoc20/Aoc20.java), Rust
+* [Day 19: Tractor Beam](https://adventofcode.com/2019/day/19) - Solutions [Java](https://github.com/saidaspen/aoc2019/blob/master/java/src/se/saidaspen/aoc2019/aoc19/Aoc19.java), Rust
+* Day 18: Many-Worlds Interpretation
+* [Day 17: Set and Forget](https://adventofcode.com/2019/day/17) - Solutions [Java](https://github.com/saidaspen/aoc2019/blob/master/java/src/se/saidaspen/aoc2019/aoc17/Aoc17.java), Rust
 * [Day 16: Flawed Frequency Transmission](https://adventofcode.com/2019/day/16) - Solutions [Java](https://github.com/saidaspen/aoc2019/blob/master/java/src/se/saidaspen/aoc2019/aoc16/Aoc16.java), Rust
 * [Day 15: Oxygen System](https://adventofcode.com/2019/day/15) - Solutions [Java](https://github.com/saidaspen/aoc2019/blob/master/java/src/se/saidaspen/aoc2019/aoc15/Aoc15.java), Rust
 * [Day 14: Space Stoichiometry](https://adventofcode.com/2019/day/14) - Solutions [Java](https://github.com/saidaspen/aoc2019/blob/master/java/src/se/saidaspen/aoc2019/aoc14/Aoc14.java), Rust
@@ -74,4 +74,5 @@ Here are the poems I entered in the Advent of Code 2019 Reddit Megathreads.
     Time to load the picture up;
     Render it, layer by layer, then;
     It’s digital now, new way to develop
+
 
