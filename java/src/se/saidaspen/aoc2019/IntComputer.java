@@ -8,20 +8,26 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import static se.saidaspen.aoc2019.IntComputer.Status.*;
+import static se.saidaspen.aoc2019.IntComputer.NetworkStatus.IDLE;
+import static se.saidaspen.aoc2019.IntComputer.NetworkStatus.RUNNING;
+import static se.saidaspen.aoc2019.IntComputer.Status.HALTED;
+import static se.saidaspen.aoc2019.IntComputer.Status.WAITING;
 
 public final class IntComputer implements Runnable {
-    
-    public enum Status {RUNNING, HALTED, IDLE;}
+
+    public enum Status {RUNNING, HALTED, WAITING}
+
+    public enum NetworkStatus {RUNNING, IDLE}
 
     private final Map<Integer, Long> memory;
 
     private final BlockingQueue<Long> in, out;
-    private final int[] pAddrs = new int[3];
+    private final int[] pAddresses = new int[3];
     private int pc = 0;     // Program Counter
 
     private Long rbo = 0L;  // Relative Base Offset
     private Status status = HALTED;
+    private NetworkStatus networkStatus = RUNNING;
     private LocalTime idleSince = null;
 
     public IntComputer(Long[] code, BlockingQueue<Long> in, BlockingQueue<Long> out) {
@@ -48,48 +54,50 @@ public final class IntComputer implements Runnable {
     }
 
     public void run() {
-        status = RUNNING;
+        status = Status.RUNNING;
         try {
             while (load(pc) != /*HALT*/ 99) {
                 var cmd = String.format("%05d", load(pc));
                 var opCode = Integer.parseInt(cmd.substring(3));
-                pAddrs[0] = getParam(cmd, 1); // Param 1
-                pAddrs[1] = getParam(cmd, 2); // Param 2
-                pAddrs[2] = getParam(cmd, 3); // Param 3
+                pAddresses[0] = getParam(cmd, 1); // Param 1
+                pAddresses[1] = getParam(cmd, 2); // Param 2
+                pAddresses[2] = getParam(cmd, 3); // Param 3
                 if (opCode == /*INPUT*/ 3) {
+                    status = WAITING;
                     Long val = read();
-                    store(pAddrs[0], val);
+                    store(pAddresses[0], val);
                     if (val != -1) {
-                        status = RUNNING;
+                        status = Status.RUNNING;
+                        networkStatus = RUNNING;
                         idleSince = null;
                     } else {
-                        if (status != IDLE) {
+                        if (networkStatus != IDLE) {
                             idleSince = LocalTime.now();
                         }
-                        status = IDLE;
+                        networkStatus = IDLE;
                     }
                     pc += 2;
                 } else if (opCode == /*OUTPUT*/ 4) {
-                    out.put(load(pAddrs[0]));
+                    out.put(load(pAddresses[0]));
                     pc += 2;
                 } else if (opCode == /*ADJUST_RBO*/ 9) {
-                    rbo += load(pAddrs[0]);
+                    rbo += load(pAddresses[0]);
                     pc += 2;
                 } else if (opCode == /*JMP_IF_TRUE*/ 5) {
-                    pc = load(pAddrs[0]) > 0 ? load(pAddrs[1]).intValue() : pc + 3;
+                    pc = load(pAddresses[0]) > 0 ? load(pAddresses[1]).intValue() : pc + 3;
                 } else if (opCode == /*JMP_IF_FALSE*/ 6) {
-                    pc = load(pAddrs[0]) == 0 ? load(pAddrs[1]).intValue() : pc + 3;
+                    pc = load(pAddresses[0]) == 0 ? load(pAddresses[1]).intValue() : pc + 3;
                 } else if (opCode == /*ADD*/ 1) {
-                    store(pAddrs[2], load(pAddrs[0]) + load(pAddrs[1]));
+                    store(pAddresses[2], load(pAddresses[0]) + load(pAddresses[1]));
                     pc += 4;
                 } else if (opCode == /*MULT*/ 2) {
-                    store(pAddrs[2], load(pAddrs[0]) * load(pAddrs[1]));
+                    store(pAddresses[2], load(pAddresses[0]) * load(pAddresses[1]));
                     pc += 4;
                 } else if (opCode == /*LESS_THAN*/ 7) {
-                    store(pAddrs[2], load(pAddrs[0]) < load(pAddrs[1]) ? 1L : 0L);
+                    store(pAddresses[2], load(pAddresses[0]) < load(pAddresses[1]) ? 1L : 0L);
                     pc += 4;
                 } else if (opCode == /*EQUALS*/ 8) {
-                    store(pAddrs[2], load(pAddrs[0]).equals(load(pAddrs[1])) ? 1L : 0L);
+                    store(pAddresses[2], load(pAddresses[0]).equals(load(pAddresses[1])) ? 1L : 0L);
                     pc += 4;
                 }
             }

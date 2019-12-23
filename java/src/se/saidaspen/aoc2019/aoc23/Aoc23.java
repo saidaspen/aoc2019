@@ -142,7 +142,6 @@ public final class Aoc23 {
                             System.out.println("Sent Y value twice: " + y);
                         }
                         valLock.lock();
-                        System.out.println(String.format("Sending %s, %s", x, y));
                         cpus[0].in().put(x);
                         cpus[0].in().put(y);
                         lastSentY = y;
