@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalTime;
-import java.util.Arrays;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -14,7 +13,7 @@ import static java.time.temporal.ChronoUnit.MILLIS;
 
 public final class Aoc23 {
 
-    private final Long[] code;
+    private String code;
 
     public static void main(String[] args) throws IOException, InterruptedException {
         Aoc23 app = new Aoc23(new String(Files.readAllBytes(Paths.get(args[0]))));
@@ -22,11 +21,7 @@ public final class Aoc23 {
     }
 
     private Aoc23(String input) {
-        code = Arrays.stream(input.split(","))
-                .map(String::trim)
-                .mapToLong(Long::parseLong)
-                .boxed()
-                .toArray(Long[]::new);
+        this.code = input;
     }
 
     @SuppressWarnings("unused")
@@ -34,7 +29,8 @@ public final class Aoc23 {
         // Setup computers
         IntComputer[] cpus = new IntComputer[50];
         for (int i = 0; i < 50; i++) {
-            cpus[i] = createComputer(i);
+            cpus[i] = new IntComputer(code);
+            cpus[i].in().put((long) i); // Set network address
         }
 
         // Setup Network devices
@@ -53,18 +49,6 @@ public final class Aoc23 {
 
         // Wait until devices threads are finished, or timeout.
         pool.awaitTermination(60L, TimeUnit.SECONDS);
-    }
-
-    private IntComputer createComputer(long nicAddr) throws InterruptedException {
-        BlockingQueue<Long> in = new ArrayBlockingQueue<>(10_000);
-        in.put(nicAddr);
-        BlockingQueue<Long> out = new ArrayBlockingQueue<>(10_000);
-
-        // Each computer runs its own copy of the code;
-        Long[] codeCopy = new Long[code.length];
-        System.arraycopy(code, 0, codeCopy, 0, code.length);
-
-        return new IntComputer(codeCopy, in, out);
     }
 
     /**
