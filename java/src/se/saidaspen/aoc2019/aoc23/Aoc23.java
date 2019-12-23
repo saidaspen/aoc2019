@@ -6,7 +6,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalTime;
-import java.util.concurrent.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static java.time.temporal.ChronoUnit.MILLIS;
@@ -48,7 +50,7 @@ public final class Aoc23 {
         pool.shutdown();
 
         // Wait until devices threads are finished, or timeout.
-        pool.awaitTermination(60L, TimeUnit.SECONDS);
+        pool.awaitTermination(10L, TimeUnit.SECONDS);
     }
 
     /**
@@ -74,6 +76,10 @@ public final class Aoc23 {
                         try {
                             Long x = computer.out().poll(500, TimeUnit.MILLISECONDS);
                             Long y = computer.out().poll(500, TimeUnit.MILLISECONDS);
+                            if (x == null || y == null) {
+                                System.err.println("Timed out waiting for data.");
+                                return;
+                            }
                             if (addr == 255) {
                                 nat.accept(x, y);
                             } else {
@@ -81,7 +87,7 @@ public final class Aoc23 {
                                 computers[Math.toIntExact(addr)].in().put(y);
                             }
                         } catch (Exception e) {
-                            System.err.println("Timed out waiting for data. Caused by " + e.getMessage());
+                            System.err.println("Error while processing data. Caused by " + e.getMessage());
                             return;
                         }
                     }
