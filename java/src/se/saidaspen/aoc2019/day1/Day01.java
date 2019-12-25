@@ -1,4 +1,4 @@
-package se.saidaspen.aoc2019.aoc01;
+package se.saidaspen.aoc2019.day1;
 
 import se.saidaspen.aoc2019.Answer;
 import se.saidaspen.aoc2019.Day;
