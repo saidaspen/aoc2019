@@ -9,7 +9,8 @@ endif
 default: build
 
 build:
-	find . -path ./test -prune -o -name "*.java" -print0 | xargs -0 javac -g -d dist
+	find . -path ./test -prune -o -name "*.java" -print0 | xargs -0 javac -cp lib/lombok.jar -g -d dist
 	@cp src/aoc.sh dist/
+	@cp -R lib/ dist
 	@chmod u+x dist/aoc.sh
 

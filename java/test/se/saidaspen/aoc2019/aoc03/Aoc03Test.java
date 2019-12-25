@@ -1,4 +1,4 @@
-package se.saidaspen.aoc2019.aoc0;
+package se.saidaspen.aoc2019.aoc03;
 
 import org.junit.Test;
 import se.saidaspen.aoc2019.Point;

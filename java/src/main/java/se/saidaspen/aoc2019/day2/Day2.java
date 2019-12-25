@@ -1,29 +1,33 @@
-package se.saidaspen.aoc2019.aoc02;
+package se.saidaspen.aoc2019.day2;
 
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import se.saidaspen.aoc2019.Day;
+
 import java.util.Arrays;
 import java.util.Optional;
 
+import static se.saidaspen.aoc2019.AocUtil.toCode;
+
 /**
- * This is the attempted soltuion to Advent of Code 2019 day 2
- * Problem can be found here:
- * https://adventofcode.com/2019/day/2
+ * Solution for Advent of Code 2019 Day 2
+ * The original puzzle can be found here: https://adventofcode.com/2019/day/2
+ * <p>
+ * Here are my results:
+ * Part     Time        Place
+ * 1        00:14:45    967
+ * 2        00:30:23    1323
  */
-public class Aoc02 {
+public class Day2 implements Day {
 
-    // This specifies if we are running part 1 or part 2 of the problem
-    private static boolean IS_PART1 = false;
+    private final String input;
 
-    // EXPECTED_OUTPUT is a constant given in the puzzle itself. It differs from person to person.
-    public static final int EXPECTED_OUTPUT = 19690720;
+    public Day2(String input) {
+        this.input = input;
+    }
 
     private static final class Params {
         int first, second;
 
-        public Params(int first, int second) {
+        private Params(int first, int second) {
             this.first = first;
             this.second = second;
         }
@@ -34,23 +38,22 @@ public class Aoc02 {
         }
     }
 
-    public static void main(String[] args) throws IOException {
-        String lines = Files.readString(Paths.get(args[0]), Charset.defaultCharset());
-        Integer[] opCodes = Arrays.stream(lines.split(","))
-                .map(String::trim)
-                .mapToInt(Integer::parseInt).boxed().toArray(Integer[]::new);
-        if (IS_PART1) {
-            opCodes[1] = 12;
-            opCodes[2] = 2;
-            System.out.println(runProgram(opCodes));
-        } else {
-            Optional<Params> params = findParams(opCodes, EXPECTED_OUTPUT);
-            if (params.isEmpty()) {
-                System.err.println("Unable to find input parameters");
-                System.exit(1);
-            }
-            System.out.println(100 * params.get().first + params.get().second);
+    @Override
+    public String part1() {
+        Integer[] opCodes = toCode(input);
+        opCodes[1] = 12;
+        opCodes[2] = 2;
+        return Integer.toString(runProgram(opCodes));
+    }
+
+    @Override
+    public String part2() {
+        Integer[] opCodes = toCode(input);
+        Optional<Params> params = findParams(opCodes, 19690720); // This constant is given in the puzzle description.
+        if (params.isEmpty()) {
+            throw new RuntimeException("Unable to find input parameters.");
         }
+        return Integer.toString(100 * params.get().first + params.get().second);
     }
 
     @SuppressWarnings("SameParameterValue")
@@ -68,7 +71,7 @@ public class Aoc02 {
         return Optional.empty(); // Unable to find suitable parameters
     }
 
-    private static Integer runProgram(Integer[] input) {
+    public static Integer runProgram(Integer[] input) {
         Integer[] opCodes = Arrays.copyOf(input, input.length);
         int readPos = 0;
         int opCode = opCodes[readPos];
@@ -80,6 +83,8 @@ public class Aoc02 {
                 opCodes[storePos] = operand1 + operand2;
             } else if (opCode == 2) { // Multiply
                 opCodes[storePos] = operand1 * operand2;
+            } else {
+                throw new RuntimeException("Unsupporterd opcode " + opCode);
             }
             readPos = readPos + 4;
             opCode = opCodes[readPos];

@@ -18,7 +18,7 @@ public class Aoc {
         try {
             Class clazz = Aoc.class.getClassLoader().loadClass(String.format("se.saidaspen.aoc2019.day%d.Day%02d", day, day));
             Day instance = (Day) clazz.getConstructors()[0].newInstance(AocUtil.input(day));
-            ((part == 1) ? instance.part1() : instance.part2()).printResult();
+            System.out.println(((part == 1) ? instance.part1() : instance.part2()));
         } catch (Exception e) {
             e.printStackTrace();
         }
