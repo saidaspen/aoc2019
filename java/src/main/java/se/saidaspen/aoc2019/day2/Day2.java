@@ -10,11 +10,6 @@ import static se.saidaspen.aoc2019.AocUtil.toCode;
 /**
  * Solution for Advent of Code 2019 Day 2
  * The original puzzle can be found here: https://adventofcode.com/2019/day/2
- * <p>
- * Here are my results:
- * Part     Time        Place
- * 1        00:14:45    967
- * 2        00:30:23    1323
  */
 public class Day2 implements Day {
 

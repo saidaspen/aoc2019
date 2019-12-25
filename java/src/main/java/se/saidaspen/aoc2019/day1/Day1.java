@@ -15,11 +15,6 @@ import static java.lang.Math.floor;
  * In Part 1 we want to figure out the fuel required for a certain weight.
  * In Part 2, we also need to take into account the weight for the fuel itself, resulting
  * in a recursive call to figure out the fuel requirement.
- * <p>
- * Here are my results:
- * Part     Time        Place
- * 1        00:02:33    407
- * 2        00:12:29    823
  */
 public final class Day1 implements Day {
 
