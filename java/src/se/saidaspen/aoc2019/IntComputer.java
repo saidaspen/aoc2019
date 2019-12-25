@@ -66,16 +66,6 @@ public final class IntComputer implements Runnable {
                     status = WAITING;
                     Long val = read();
                     store(pAddresses[0], val);
-                    if (val != -1) {
-                        status = Status.RUNNING;
-                        networkStatus = RUNNING;
-                        idleSince = null;
-                    } else {
-                        if (networkStatus != IDLE) {
-                            idleSince = LocalTime.now();
-                        }
-                        networkStatus = IDLE;
-                    }
                     pc += 2;
                 } else if (opCode == /*OUTPUT*/ 4) {
                     out.put(load(pAddresses[0]));
