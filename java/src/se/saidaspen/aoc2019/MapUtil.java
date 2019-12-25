@@ -6,7 +6,7 @@ import java.util.Map;
 
 public class MapUtil {
 
-    private static void printMap(Map<Point, Character> map) {
+    public static String toString(Map<Point, Character> map) {
         System.out.print("\033[2J"); // Clear screen
         int largestX = 0;
         int largestY = 0;
@@ -18,7 +18,23 @@ public class MapUtil {
         for (Point p : map.keySet()) {
             lines.get(p.y).set(p.x, map.get(p));
         }
-        render(lines);
+        return render(lines);
+    }
+
+
+    public static void printMap(Map<Point, Character> map) {
+        System.out.print("\033[2J"); // Clear screen
+        int largestX = 0;
+        int largestY = 0;
+        for (Point p : map.keySet()) {
+            largestX = Math.max(p.x, largestX);
+            largestY = Math.max(p.y, largestY);
+        }
+        List<List<Character>> lines = emptyLines(largestX, largestY);
+        for (Point p : map.keySet()) {
+            lines.get(p.y).set(p.x, map.get(p));
+        }
+        System.out.println(render(lines));
     }
 
     private static List<List<Character>> emptyLines(int xMax, int yMax) {
@@ -33,13 +49,14 @@ public class MapUtil {
         return lines;
     }
 
-    private static void render(List<List<Character>> lines) {
+    private static String render(List<List<Character>> lines) {
+        StringBuilder sb = new StringBuilder();
         for (List<Character> row : lines) {
-            StringBuilder sb = new StringBuilder();
             for (Character c : row) {
                 sb.append(c);
             }
-            System.out.println(sb);
+            sb.append("\n");
         }
+        return sb.toString();
     }
 }
