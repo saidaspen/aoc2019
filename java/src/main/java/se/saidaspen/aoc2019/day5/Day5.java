@@ -1,12 +1,14 @@
 package se.saidaspen.aoc2019.aoc05;
 
+import se.saidaspen.aoc2019.Day;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Scanner;
 
-public class Aoc05 {
+public class Day5 implements Day {
 
     public static void main(String[] args) throws IOException {
         String fCont = new String(Files.readAllBytes(Paths.get(args[0])));
@@ -54,5 +56,15 @@ public class Aoc05 {
                 pc += 4;
             }
         } while (code[pc] != /* ABORT_CODE*/ 99);
+    }
+
+    @Override
+    public String part1() {
+        return null;
+    }
+
+    @Override
+    public String part2() {
+        return null;
     }
 }

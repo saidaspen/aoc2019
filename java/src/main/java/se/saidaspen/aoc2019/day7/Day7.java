@@ -1,8 +1,7 @@
 package se.saidaspen.aoc2019.aoc07;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import se.saidaspen.aoc2019.Day;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -12,38 +11,49 @@ import java.util.stream.IntStream;
 import static java.util.Collections.swap;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.LongStream.range;
+import static se.saidaspen.aoc2019.AocUtil.toCode;
 
 /**
  * Solution to Advent of Code 2019 Day 7
- *
+ * The original puzzle can be found here: https://adventofcode.com/2019/day/4
+ * <p>
  * Here is the accompanying poem:
- *
+ * <p>
  * Fuel it up, if ye may,
  * Rocket equation was essential.
  * Navigation was cleared yesterday,
  * Amplification is now exponential.
- *
+ * <p>
  * Turn it up and loop it back,
  * get that thrust to amplify
  * a trick, a hack — let's call it that
  * tonight we are off – tonight we fly
- *
  */
-public class Aoc07 {
+public class Day7 implements Day {
 
     private static final long PHASE_MIN = 0L;
     private static final long PHASE_MAX = 4L;
-    private static final boolean USE_FEEDBACK = false;
+    private final Long[] code;
 
-    public static void main(String[] args) throws IOException {
-        Long[] code = Arrays.stream(new String(Files.readAllBytes(Paths.get(args[0]))).split(","))
-                .mapToLong(Long::parseLong)
-                .boxed()
-                .toArray(Long[]::new);
+    public Day7(String input) {
+        code = toCode(input);
+    }
+
+    @Override
+    public String part1() {
+        return Long.toString(run(false));
+    }
+
+    @Override
+    public String part2() {
+        return Long.toString(run(true));
+    }
+
+    private long run(boolean useFeedback) {
         List<List<Long>> permutations = getPermutations(range(PHASE_MIN, PHASE_MAX + 1).boxed().collect(toList()), 0);
-        System.out.println("Maximum thrust: " + permutations.parallelStream()
-                .mapToLong(l -> findLargestThrust(code, l)).max()
-                .orElseThrow(() -> new RuntimeException("Unable to find a maximum value")));
+        return permutations.parallelStream()
+                .mapToLong(l -> findLargestThrust(code, l, useFeedback)).max()
+                .orElseThrow(() -> new RuntimeException("Unable to find a maximum value"));
     }
 
     private static List<List<Long>> getPermutations(List<Long> arr, int k) {
@@ -59,13 +69,13 @@ public class Aoc07 {
         return permutations;
     }
 
-    public static Long findLargestThrust(Long[] code, List<Long> phases) {
+    public static Long findLargestThrust(Long[] code, List<Long> phases, boolean useFeedback) {
         try {
             ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(5);
             List<BlockingQueue<Long>> wires = IntStream.range(0, phases.size() + 1)
                     .mapToObj(c -> new ArrayBlockingQueue<Long>(2))
                     .collect(toList());
-            if (USE_FEEDBACK) {
+            if (useFeedback) {
                 wires.remove(wires.size() - 1);
                 wires.add(wires.size(), wires.get(0));
             }
@@ -101,13 +111,11 @@ public class Aoc07 {
                     int opCode = Integer.parseInt(cmd.substring(3));
                     if (opCode == /*INPUT*/ 3) {
                         Long inputVal = in.poll(10L, TimeUnit.DAYS);
-                        System.out.println("Got input: " + inputVal);
                         code[code[pc + 1].intValue()] = inputVal;
                         pc += 2;
                         continue;
                     } else if (opCode == /*OUTPUT*/ 4) {
                         long outVal = code[code[pc + 1].intValue()];
-                        System.out.println("Sending output: " + outVal);
                         out.put(outVal);
                         pc += 2;
                         continue;
