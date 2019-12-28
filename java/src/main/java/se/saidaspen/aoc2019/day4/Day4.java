@@ -1,4 +1,4 @@
-package se.saidaspen.aoc2019.aoc04;
+package se.saidaspen.aoc2019.day4;
 
 import se.saidaspen.aoc2019.Day;
 
@@ -9,11 +9,15 @@ import static java.lang.Integer.parseInt;
 import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
 
-public final class Aoc04 implements Day {
+/**
+ * Solution for Advent of Code 2019 Day 4
+ * The original puzzle can be found here: https://adventofcode.com/2019/day/4
+ */
+public final class Day4 implements Day {
 
     private final String input;
 
-    public Aoc04(String input) {
+    public Day4(String input) {
         this.input = input;
     }
 

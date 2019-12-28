@@ -13,7 +13,6 @@ import static java.util.stream.Collectors.toList;
 /**
  * Solution for Advent of Code 2019 Day 3
  * The original puzzle can be found here: https://adventofcode.com/2019/day/3
- * <p>
  */
 public class Day3 implements Day {
     private static final Point ORIGIN = Point.of(0, 0);

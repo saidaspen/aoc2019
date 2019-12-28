@@ -22,4 +22,10 @@ public class AocUtil {
                 .map(String::trim)
                 .mapToInt(Integer::parseInt).boxed().toArray(Integer[]::new);
     }
+
+    public static Long[] toLongCode(String input) {
+        return Arrays.stream(input.split(","))
+                .map(String::trim)
+                .mapToLong(Long::parseLong).boxed().toArray(Long[]::new);
+    }
 }

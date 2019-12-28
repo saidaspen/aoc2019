@@ -2,9 +2,7 @@ package se.saidaspen.aoc2019;
 
 import org.junit.Test;
 
-import java.io.IOException;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
 
 public class AocUtilTest {
 

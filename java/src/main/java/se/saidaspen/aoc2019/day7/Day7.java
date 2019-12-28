@@ -1,17 +1,19 @@
-package se.saidaspen.aoc2019.aoc07;
+package se.saidaspen.aoc2019.day7;
 
 import se.saidaspen.aoc2019.Day;
+import se.saidaspen.aoc2019.IntComputer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 
 import static java.util.Collections.swap;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.LongStream.range;
-import static se.saidaspen.aoc2019.AocUtil.toCode;
+import static se.saidaspen.aoc2019.AocUtil.toLongCode;
 
 /**
  * Solution to Advent of Code 2019 Day 7
@@ -29,14 +31,15 @@ import static se.saidaspen.aoc2019.AocUtil.toCode;
  * a trick, a hack — let's call it that
  * tonight we are off – tonight we fly
  */
+
 public class Day7 implements Day {
 
-    private static final long PHASE_MIN = 0L;
-    private static final long PHASE_MAX = 4L;
+    private static final int PHASE_MIN = 0;
+    private static final int PHASE_MAX = 4;
     private final Long[] code;
 
     public Day7(String input) {
-        code = toCode(input);
+        code = toLongCode(input);
     }
 
     @Override
@@ -50,9 +53,9 @@ public class Day7 implements Day {
     }
 
     private long run(boolean useFeedback) {
-        List<List<Long>> permutations = getPermutations(range(PHASE_MIN, PHASE_MAX + 1).boxed().collect(toList()), 0);
+        List<List<Long>> permutations = getPermutations(LongStream.range(PHASE_MIN, PHASE_MAX + 1).boxed().collect(toList()), 0);
         return permutations.parallelStream()
-                .mapToLong(l -> findLargestThrust(code, l, useFeedback)).max()
+                .mapToLong(i -> findLargestThrust(code, i, useFeedback)).max()
                 .orElseThrow(() -> new RuntimeException("Unable to find a maximum value"));
     }
 
@@ -73,14 +76,16 @@ public class Day7 implements Day {
         try {
             ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(5);
             List<BlockingQueue<Long>> wires = IntStream.range(0, phases.size() + 1)
-                    .mapToObj(c -> new ArrayBlockingQueue<Long>(2))
+                    .mapToObj(c -> new ArrayBlockingQueue<Long>(10_000))
                     .collect(toList());
             if (useFeedback) {
                 wires.remove(wires.size() - 1);
                 wires.add(wires.size(), wires.get(0));
             }
+            List<Amp> amps = new LinkedList<>();
             for (int i = 0; i < phases.size(); i++) {
                 wires.get(i).put(phases.get(i));
+                //amps.add(new Amp(code, wires.get(i), wires.get(i + 1)));
                 executor.execute(new Amp(code, wires.get(i), wires.get(i + 1)));
             }
             wires.get(0).put(0L); // Initial Input
@@ -93,6 +98,13 @@ public class Day7 implements Day {
     }
 
     private static class Amp implements Runnable {
+        public boolean isRunnable() {
+            return status == Status.RUNNABLE || (!in.isEmpty() && status == Status.WAITING);
+        }
+
+        public enum Status {RUNNABLE, RUNNING, HALTED, WAITING}
+
+        private Status status = Status.RUNNABLE;
         private final Long[] code;
         private int pc = 0;
         private final BlockingQueue<Long> in;
@@ -110,12 +122,16 @@ public class Day7 implements Day {
                     String cmd = String.format("%05d", code[pc]);
                     int opCode = Integer.parseInt(cmd.substring(3));
                     if (opCode == /*INPUT*/ 3) {
+                        status = Status.WAITING;
                         Long inputVal = in.poll(10L, TimeUnit.DAYS);
+                        System.out.println("Got input: " + inputVal);
                         code[code[pc + 1].intValue()] = inputVal;
+                        status = Status.RUNNABLE;
                         pc += 2;
                         continue;
                     } else if (opCode == /*OUTPUT*/ 4) {
                         long outVal = code[code[pc + 1].intValue()];
+                        System.out.println("Sending output: " + outVal);
                         out.put(outVal);
                         pc += 2;
                         continue;

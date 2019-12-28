@@ -1,15 +1,12 @@
-package se.saidaspen.aoc2019.aoc06;
+package se.saidaspen.aoc2019.day6;
 
 import se.saidaspen.aoc2019.Day;
 
-import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import static java.nio.file.Files.lines;
 import static java.util.stream.Collectors.toMap;
 
 /**
@@ -31,19 +28,25 @@ public final class Day6 implements Day {
 
     private final Map<String, String> orbits;
 
-    private Day6(String input) {
+    Day6(String input) {
         orbits = Arrays.stream(input.split("\n")).map(l -> l.split("\\)")).collect(toMap(l -> l[1], l -> l[0]));
     }
 
-    private void run() {
+    @Override
+    public String part1() {
         int cnt = orbits.keySet().parallelStream().map(this::pathToCOM).mapToInt(List::size).sum();
+        return Integer.toString(cnt);
+    }
+
+    @Override
+    public String part2() {
         LinkedList<String> youPath = pathToCOM("YOU");
         LinkedList<String> sanPath = pathToCOM("SAN");
         while (youPath.getLast().equals(sanPath.getLast())) {
             youPath.removeLast();
             sanPath.removeLast();
         }
-        System.out.println(String.format("Total:%d. YOU->SAN:%d", cnt, (youPath.size() + sanPath.size())));
+        return Integer.toString(youPath.size() + sanPath.size());
     }
 
     private LinkedList<String> pathToCOM(String from) {
@@ -53,15 +56,5 @@ public final class Day6 implements Day {
             path.add(inner);
         }
         return path;
-    }
-
-    @Override
-    public String part1() {
-        return null;
-    }
-
-    @Override
-    public String part2() {
-        return null;
     }
 }

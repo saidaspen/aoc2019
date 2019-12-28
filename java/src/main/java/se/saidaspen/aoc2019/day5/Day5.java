@@ -1,38 +1,45 @@
-package se.saidaspen.aoc2019.aoc05;
+package se.saidaspen.aoc2019.day5;
 
 import se.saidaspen.aoc2019.Day;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Scanner;
+import java.util.Stack;
 
-public class Day5 implements Day {
+import static se.saidaspen.aoc2019.AocUtil.toCode;
 
-    public static void main(String[] args) throws IOException {
-        String fCont = new String(Files.readAllBytes(Paths.get(args[0])));
-        Integer[] code = Arrays.stream(fCont.split(","))
-                .map(String::trim)
-                .mapToInt(Integer::parseInt)
-                .boxed()
-                .toArray(Integer[]::new);
-        run(code);
+/**
+ * Solution for Advent of Code 2019 Day 5
+ * The original puzzle can be found here: https://adventofcode.com/2019/day/5
+ */
+public final class Day5 implements Day {
+
+    private final String input;
+
+    public Day5(String input) {
+        this.input = input;
     }
 
-    private static void run(Integer[] code) {
+    @Override
+    public String part1() {
+        return Integer.toString(run(toCode(input), 1).pop());
+    }
+
+    @Override
+    public String part2() {
+        return Integer.toString(run(toCode(input), 5).pop());
+    }
+
+    private static Stack<Integer> run(Integer[] code, int in) {
         int pc = 0;
+        Stack<Integer> out = new Stack<>();
         do {
             String cmd = String.format("%05d", code[pc]);
             int opCode = Integer.parseInt(cmd.substring(3));
             if (opCode == /*INPUT*/ 3) {
-                System.out.println("Input: ");
-                int input = Integer.parseInt(new Scanner(System.in).nextLine().trim());
-                code[code[pc + 1]] = input;
+                code[code[pc + 1]] = in;
                 pc += 2;
                 continue;
             } else if (opCode == /*OUTPUT*/ 4) {
-                System.out.println(code[code[pc + 1]]);
+                out.add(code[code[pc + 1]]);
                 pc += 2;
                 continue;
             }
@@ -56,15 +63,6 @@ public class Day5 implements Day {
                 pc += 4;
             }
         } while (code[pc] != /* ABORT_CODE*/ 99);
-    }
-
-    @Override
-    public String part1() {
-        return null;
-    }
-
-    @Override
-    public String part2() {
-        return null;
+        return out;
     }
 }
