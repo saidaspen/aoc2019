@@ -1,39 +1,50 @@
-package se.saidaspen.aoc2019.aoc20;
+package se.saidaspen.aoc2019.day20;
 
 import lombok.Value;
+import se.saidaspen.aoc2019.Day;
 import se.saidaspen.aoc2019.Point;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public final class Aoc20 {
+/**
+ * Solution to Advent of Code 2019 Day 20
+ * The original puzzle can be found here: https://adventofcode.com/2019/day/20
+ */
+public final class Day20 implements Day {
 
     private final int width;
     private final int height;
     private final Map<Point, Character> map = new HashMap<>();
     private final Map<Point, String> portals = new HashMap<>();
     private final Map<Position, List<Position>> nbrMemo = new HashMap<>();
+    private boolean useRecursive;
 
-    @Value private static class Position {
+    @Override
+    public String part1() {
+        this.useRecursive = false;
+        return Integer.toString(getDistance(findPortal("AA").get(0).getKey(), findPortal("ZZ").get(0).getKey()));
+    }
+
+    @Override
+    public String part2() {
+        this.useRecursive = true;
+        return Integer.toString(getDistance(findPortal("AA").get(0).getKey(), findPortal("ZZ").get(0).getKey()));
+    }
+
+    @Value
+    private static class Position {
         private final Point point;
         private final int level;
     }
 
-    @Value private static class BfsNode {
+    @Value
+    private static class BfsNode {
         private final Position pos;
         private final int dist;
     }
 
-    public static void main(String[] args) throws IOException {
-        String input = new String(Files.readAllBytes(Paths.get(args[0])));
-        Aoc20 app = new Aoc20(input);
-        System.out.println(app.run());
-    }
-
-    Aoc20(String input) {
+    Day20(String input) {
         List<String> lines = Arrays.stream(input.split("\n")).collect(Collectors.toList());
         width = lines.get(0).length();
         height = lines.size();
@@ -66,11 +77,6 @@ public final class Aoc20 {
                 }
             }
         }
-    }
-
-    int run() {
-        // Fill the nodes, setting the neighbouring nodes
-        return getDistance(findPortal("AA").get(0).getKey(), findPortal("ZZ").get(0).getKey());
     }
 
     private boolean isChar(char c) {
@@ -127,7 +133,10 @@ public final class Aoc20 {
             List<Map.Entry<Point, String>> portalPoints = findPortal(portal);
             for (Map.Entry<Point, String> p : portalPoints) {
                 if (!p.getKey().equals(pos.point)) {
-                    neighbours.add(new Position(p.getKey(), lvl));
+                    if (useRecursive)
+                        neighbours.add(new Position(p.getKey(), lvl));
+                    else
+                        neighbours.add(new Position(p.getKey(), pos.level));
                 }
             }
         }

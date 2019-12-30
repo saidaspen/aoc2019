@@ -1,10 +1,12 @@
-package se.saidaspen.aoc2019.aoc20;
+package se.saidaspen.aoc2019.day20;
 
 import org.junit.Test;
+import se.saidaspen.aoc2019.AocUtil;
+import se.saidaspen.aoc2019.day20.Day20;
 
 import static org.junit.Assert.assertEquals;
 
-public class Aoc20Test {
+public class Day20Test {
 
     @Test
     public void part2Example1() {
@@ -28,8 +30,8 @@ public class Aoc20Test {
                         "  ###########.#####  \n" +
                         "             Z       \n" +
                         "             Z       ";
-        Aoc20 app = new Aoc20(input);
-        assertEquals(26, app.run());
+        Day20 app = new Day20(input);
+        assertEquals("26", app.part2());
     }
 
     @Test
@@ -72,7 +74,19 @@ public class Aoc20Test {
                         "  #############.#.#.###.###################  \n" +
                         "               A O F   N                     \n" +
                         "               A A D   M                     \n";
-        Aoc20 app = new Aoc20(input);
-        assertEquals(396, app.run());
+        Day20 app = new Day20(input);
+        assertEquals("396", app.part2());
+    }
+
+    @Test
+    public void part1() throws Exception {
+        Day20 app = new Day20(AocUtil.input(20));
+        assertEquals("570", app.part1());
+    }
+
+    @Test
+    public void part2() throws Exception {
+        Day20 app = new Day20(AocUtil.input(20));
+        assertEquals("7056", app.part2());
     }
 }
