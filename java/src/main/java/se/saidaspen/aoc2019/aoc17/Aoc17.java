@@ -1,5 +1,6 @@
 package se.saidaspen.aoc2019.aoc17;
 
+import se.saidaspen.aoc2019.AocUtil;
 import se.saidaspen.aoc2019.IntComputer;
 import se.saidaspen.aoc2019.Point;
 
@@ -26,8 +27,7 @@ public class Aoc17 {
     private Point startPos;
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        String input = new String(Files.readAllBytes(Paths.get(args[0])));
-        Aoc17 app = new Aoc17(input);
+        Aoc17 app = new Aoc17(AocUtil.input(17));
         app.run();
     }
 

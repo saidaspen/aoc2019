@@ -1,25 +1,24 @@
-package se.saidaspen.aoc2019.aoc16;
+package se.saidaspen.aoc2019.day16;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import se.saidaspen.aoc2019.Day;
+
 import java.util.Arrays;
 
-public class Aoc16 {
-
-    public static void main(String[] args) throws IOException {
-        String input = new String(Files.readAllBytes(Paths.get(args[0])));
-        Aoc16 app = new Aoc16(input, 10_000);
-        System.out.println(app.part2());
-    }
+/**
+ * Solution to Advent of Code 2019 Day 16
+ * The original puzzle can be found here: https://adventofcode.com/2019/day/16
+ */
+public class Day16 implements Day {
 
     private static final Integer[] basePattern = new Integer[]{0, 1, 0, -1};
     private final int msgOffset;
+    private final int numPhases;
     private int[] data;
     private int inSize;
 
-    Aoc16(String input, int repeat) {
+    Day16(String input, int repeat, int numPhases) {
         msgOffset = Integer.parseInt(input.substring(0, 7));
+        this.numPhases = numPhases;
         String repeated = input.repeat(repeat);
         inSize = repeated.length();
         data = new int[inSize];
@@ -28,17 +27,19 @@ public class Aoc16 {
         }
     }
 
-    String part1() {
-        for (int i = 0; i < data.length; i++) {
-            data[i] = applyPattern(i);
+    public String part1() {
+        for (int p = 0; p < numPhases; p++) {
+            for (int i = 0; i < data.length; i++) {
+                data[i] = applyPattern(i);
+            }
         }
-        return createString(data);
+        return createString(data).substring(0, 8);
     }
 
-    String part2() {
+    public String part2() {
         int len = data.length - msgOffset;
         assert msgOffset > inSize / 2;
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < numPhases; i++) {
             for (int j = len - 2; j >= 0; j--) {
                 data[j + msgOffset] = (data[j + msgOffset] + data[j + msgOffset + 1]) % 10;
             }

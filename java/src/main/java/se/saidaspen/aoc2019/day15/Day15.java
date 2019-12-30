@@ -1,84 +1,47 @@
-package se.saidaspen.aoc2019.aoc15;
+package se.saidaspen.aoc2019.day15;
 
+import se.saidaspen.aoc2019.AocUtil;
+import se.saidaspen.aoc2019.Day;
 import se.saidaspen.aoc2019.IntComputer;
 import se.saidaspen.aoc2019.Point;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-public class Aoc15 {
+/**
+ * Solution to Advent of Code 2019 Day 15
+ * The original puzzle can be found here: https://adventofcode.com/2019/day/15
+ */
+public class Day15 implements Day {
 
     public final static int NORTH = 0;
     public final static int SOUTH = 1;
     public final static int WEST = 2;
     public final static int EAST = 3;
-    public static final String ANSI_RESET = "\u001B[0m";
-    public static final String ANSI_BLACK = "\u001B[30m";
-    public static final String ANSI_RED = "\u001B[31m";
-    public static final String ANSI_GREEN = "\u001B[32m";
-    public static final String ANSI_YELLOW = "\u001B[33m";
-    public static final String ANSI_BLUE = "\u001B[34m";
-    public static final String ANSI_PURPLE = "\u001B[35m";
-    public static final String ANSI_CYAN = "\u001B[36m";
-    public static final String ANSI_WHITE = "\u001B[37m";
-    public static final String ANSI_BLACK_BACKGROUND = "\u001B[40m";
-    public static final String ANSI_RED_BACKGROUND = "\u001B[41m";
-    public static final String ANSI_GREEN_BACKGROUND = "\u001B[42m";
-    public static final String ANSI_YELLOW_BACKGROUND = "\u001B[43m";
-    public static final String ANSI_BLUE_BACKGROUND = "\u001B[44m";
-    public static final String ANSI_PURPLE_BACKGROUND = "\u001B[45m";
-    public static final String ANSI_CYAN_BACKGROUND = "\u001B[46m";
-    public static final String ANSI_WHITE_BACKGROUND = "\u001B[47m";
 
-    private static final boolean PRINT = true;
     static final Character TILE_WALL = '█';
     static final Character TILE_OXYGEN_GEN = 'X';
     static final Character TILE_OXYGEN = 'O';
 
-    private static final long MODE_MAP = 1L;
-    private static final long MODE_OXYGEN = 2L;
     private static final char TILE_ROBOT = 'R';
     private static final char TILE_KNOWN = '.';
-    public static final char TILE_EMPTY = ' ';
 
     private final Long[] code;
     private static Map<Point, Character> map = new HashMap<>();
-    private static Long[] display = new Long[]{0L, 0L, 0L, 0L};
 
-    public static void main(String[] args) throws IOException, InterruptedException {
-        String input = new String(Files.readAllBytes(Paths.get(args[0])));
-        Aoc15 aoc15 = new Aoc15(input);
-        RepairBot robot = new RepairBot(aoc15.code, Point.of(0, 0), new WallSearch());
-        ThreadPoolExecutor pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
-        pool.execute(robot);
-        pool.shutdown();
-        pool.awaitTermination(100L, TimeUnit.DAYS);
-        printMap(map);
-        aoc15.simulateOxygenSpread(map);
+    Day15(String input) {
+        code = AocUtil.toLongCode(input);
     }
 
-    private Aoc15(String input) {
-        code = Arrays.stream(input.split(","))
-                .map(String::trim)
-                .mapToLong(Long::parseLong)
-                .boxed()
-                .toArray(Long[]::new);
-    }
-
-    private void simulateOxygenSpread(Map<Point, Character> map) throws InterruptedException {
-        display[3] = MODE_OXYGEN;
+    private long simulateOxygenSpread(Map<Point, Character> map) {
         Point oxygenStartPos = find(map, TILE_OXYGEN_GEN).get(0);
         map.put(oxygenStartPos, TILE_OXYGEN);
         List<Point> oxygenPoints;
-        Long cnt = 1L;
+        long cnt = 0L;
         do {
-            Thread.sleep(20L);
             oxygenPoints = find(map, TILE_OXYGEN);
             for (Point p : oxygenPoints) {
                 Point[] adjacent = getAdjacent(p);
@@ -89,9 +52,8 @@ public class Aoc15 {
                 }
             }
             cnt++;
-            printMap(map);
-            display[2] = cnt;
         } while (!isFilled());
+        return cnt;
     }
 
     private boolean isFilled() {
@@ -122,85 +84,35 @@ public class Aoc15 {
         return points;
     }
 
-    private static void printMap(Map<Point, Character> panelColors) {
-        if (!PRINT) {
-            return;
-        }
-        System.out.print("\033[2J"); // Clear screen
-        Map<Point, Character> canvas = reorient(panelColors);
-        var largestX = 0;
-        var largestY = 0;
-        for (Point p : canvas.keySet()) {
-            largestX = Math.max(p.x, largestX);
-            largestY = Math.max(p.y, largestY);
-        }
-        List<List<Character>> lines = emptyLines(largestX, largestY);
-        for (Point p : canvas.keySet()) {
-            lines.get(p.y).set(p.x, canvas.get(p));
-        }
-        render(lines);
-        String mode = "";
-        if (display[3] == 0) {
-            mode = "SEARCH OXYGEN";
-        } else if (display[3] == 1) {
-            mode = "FILL MAP";
-        } else if (display[3] == 2) {
-            mode = "FILL OXYGEN";
-        }
-        System.out.println("Mode: " + mode + "\t" + "Robot steps: " + display[0] + "\t" + "Closest path: " + display[1] + "\t" + "Oxygen spread (s): " + display[2]);
-    }
-
-    private static List<List<Character>> emptyLines(int xMax, int yMax) {
-        List<List<Character>> lines = new ArrayList<>();
-        for (int row = 0; row <= yMax; row++) {
-            List<Character> r = new ArrayList<>();
-            for (int col = 0; col <= xMax; col++) {
-                r.add(' ');
-            }
-            lines.add(r);
-        }
-        return lines;
-    }
-
-    private static Map<Point, Character> reorient(Map<Point, Character> map) {
-        Map<Point, Character> outMap = new HashMap<>();
-        int minX = 0;
-        int minY = 0;
-        for (Point p : map.keySet()) {
-            minX = Math.min(p.x, minX);
-            minY = Math.min(p.y, minY);
-        }
-        for (Point p : map.keySet()) {
-            outMap.put(Point.of(p.x + Math.abs(minX), p.y + Math.abs(minY)), map.get(p));
-        }
-        return outMap;
-    }
-
-    private static void render(List<List<Character>> lines) {
-        for (int i = lines.size() - 1; i >= 0; i--) {
-            List<Character> row = lines.get(i);
-            StringBuilder sb = new StringBuilder();
-            for (Character c : row) {
-                sb.append(colorize(c));
-            }
-            System.out.println(sb);
+    @Override
+    public String part1() {
+        try {
+            RepairBot robot = new RepairBot(code, Point.of(0, 0));
+            ThreadPoolExecutor pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
+            pool.execute(robot);
+            pool.shutdown();
+            pool.awaitTermination(20L, TimeUnit.SECONDS);
+            return Long.toString(robot.closestPath);
+        } catch (Exception e) {
+            throw new RuntimeException("Exception while running simulation.", e);
         }
     }
 
-    private static String colorize(Character c) {
-        if (c == TILE_OXYGEN) {
-            return ANSI_BLUE_BACKGROUND + " " + ANSI_RESET;
-        } else if (c == TILE_OXYGEN_GEN) {
-            return ANSI_RED + "X" + ANSI_RESET;
-        } else if (c == TILE_KNOWN) {
-            return ANSI_GREEN_BACKGROUND + " " + ANSI_RESET;
-        } else {
-            return c.toString();
+    @Override
+    public String part2() {
+        try {
+            RepairBot robot = new RepairBot(code, Point.of(0, 0));
+            ThreadPoolExecutor pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
+            pool.execute(robot);
+            pool.shutdown();
+            pool.awaitTermination(100L, TimeUnit.DAYS);
+            return Long.toString(simulateOxygenSpread(map));
+        } catch (Exception e) {
+            throw new RuntimeException("Exception while running simulation.", e);
         }
     }
 
     private static class RepairBot implements Runnable {
-        private final SearchStrategy strategy;
         private final Stack<Point> log = new Stack<>();
         private final IntComputer cpu;
         private ArrayBlockingQueue<Long> input, output;
@@ -208,13 +120,13 @@ public class Aoc15 {
         private int dir = 1;
         long step = 0;
         private Point oxygenPos;
+        private long closestPath = 0;
 
-        RepairBot(Long[] code, Point start, SearchStrategy strategy) {
+        RepairBot(Long[] code, Point start) {
             this.input = new ArrayBlockingQueue<>(10000);
             this.output = new ArrayBlockingQueue<>(10000);
             cpu = new IntComputer(code, output, input);
             pos = start;
-            this.strategy = strategy;
             map.put(pos, TILE_ROBOT);
         }
 
@@ -226,10 +138,6 @@ public class Aoc15 {
             try {
                 while (!mapKnown()) {
                     step++;
-                    display[0] = step;
-                    if (step % 100 == 0) {
-                        printMap(map);
-                    }
                     logPosition();
                     output.put((long) dir);
                     Long status = input.poll(5, TimeUnit.SECONDS);
@@ -240,17 +148,60 @@ public class Aoc15 {
                     } else if (status == 1) {
                         move();
                     } else if (status == 2) {
-                        display[1] = (long) log.size();
-                        display[3] = MODE_MAP;
+                        if (closestPath == 0) {
+                            closestPath = log.size();
+                        }
                         addToMap(TILE_OXYGEN_GEN);
                         move();
                         oxygenPos = pos;
                     }
-                    dir = strategy.getNext(pos, dir, map);
+                    dir = getNext(pos, dir, map);
                 }
             } catch (Throwable t) {
                 throw new RuntimeException(t);
             }
+        }
+
+        public int getNext(Point pos, int dir, Map<Point, Character> map) {
+            Point[] adjacent = getAdjacent(pos);
+            int rightOf;
+            int leftOf;
+            int back;
+            if (dir == 1) {
+                back = 2;
+                leftOf = 3;
+                rightOf = 4;
+            } else if (dir == 2) {
+                back = 1;
+                leftOf = 4;
+                rightOf = 3;
+            } else if (dir == 3) {
+                back = 4;
+                leftOf = 2;
+                rightOf = 1;
+            } else if (dir == 4) {
+                back = 3;
+                leftOf = 1;
+                rightOf = 2;
+            } else {
+                throw new RuntimeException("Unsupported direction " + dir);
+            }
+            if (!isWall(map, adjacent[(4 + rightOf - 1) % 4])) {
+                return rightOf;
+            } else if (!isWall(map, adjacent[(4 + dir - 1) % 4])) {
+                return dir;
+            } else if (!isWall(map, adjacent[(4 + leftOf - 1) % 4])) {
+                return leftOf;
+            } else if ((!isWall(map, adjacent[(4 + back - 1) % 4]))) {
+                return back;
+            } else {
+                throw new RuntimeException("Surrounded by walls!");
+            }
+        }
+
+        @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+        private boolean isWall(Map<Point, Character> map, Point rightOf) {
+            return map.containsKey(rightOf) && TILE_WALL.equals(map.get(rightOf));
         }
 
         private void logPosition() {
