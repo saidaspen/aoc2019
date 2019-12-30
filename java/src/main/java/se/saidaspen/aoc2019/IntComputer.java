@@ -24,7 +24,7 @@ public final class IntComputer implements Runnable {
     private final BlockingQueue<Long> in, out;
     private final int[] pAddresses = new int[3];
     private int pc = 0;     // Program Counter
-
+    private int timeout = 50;
     private Long rbo = 0L;  // Relative Base Offset
     private Status status = HALTED;
     private NetworkStatus networkStatus = RUNNING;
@@ -109,7 +109,7 @@ public final class IntComputer implements Runnable {
     }
 
     private Long read() throws InterruptedException {
-        Long val = in.poll(50, TimeUnit.MILLISECONDS);
+        Long val = in.poll(timeout, TimeUnit.MILLISECONDS);
         return val == null ? -1L : val;
     }
 
@@ -153,4 +153,9 @@ public final class IntComputer implements Runnable {
     public LocalTime idleTime() {
         return this.idleSince;
     }
+
+    public void setTimeout(int i) {
+        this.timeout = i;
+    }
+
 }

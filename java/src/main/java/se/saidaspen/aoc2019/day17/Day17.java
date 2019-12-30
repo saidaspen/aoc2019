@@ -1,12 +1,10 @@
-package se.saidaspen.aoc2019.aoc17;
+package se.saidaspen.aoc2019.day17;
 
 import se.saidaspen.aoc2019.AocUtil;
+import se.saidaspen.aoc2019.Day;
 import se.saidaspen.aoc2019.IntComputer;
 import se.saidaspen.aoc2019.Point;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Executors;
@@ -14,7 +12,11 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-public class Aoc17 {
+/**
+ * Solution to Advent of Code 2019 Day 17
+ * The original puzzle can be found here: https://adventofcode.com/2019/day/17
+ */
+public final class Day17 implements Day {
 
     private static final int NORTH = 0;
     private static final int EAST = 1;
@@ -22,94 +24,27 @@ public class Aoc17 {
     private static final int WEST = 3;
     private static final List<Character> dirSymbols = Arrays.asList('^', '>', 'v', '<');
 
+    private static Map<Point, Character> map = new HashMap<>();
     private final Long[] code;
     private int dir;
     private Point startPos;
 
-    public static void main(String[] args) throws IOException, InterruptedException {
-        Aoc17 app = new Aoc17(AocUtil.input(17));
-        app.run();
+    Day17(String input) {
+        code = AocUtil.toLongCode(input);
     }
 
-    Aoc17(String input) {
-        code = Arrays.stream(input.split(","))
-                .map(String::trim)
-                .mapToLong(Long::parseLong)
-                .boxed()
-                .toArray(Long[]::new);
-    }
 
-    private static Map<Point, Character> map = new HashMap<>();
-
-    // The first step is to calibrate the cameras by getting the alignment parameters of some well-defined points. Locate all scaffold intersections; for each, its alignment parameter is the distance between its left edge and the left edge of the view multiplied by the distance between its top edge and the top edge of the view. Here, the intersections from the above image are marked O:
-    void run() throws InterruptedException {
-        ArrayBlockingQueue<Long> in = new ArrayBlockingQueue<>(1);
-        ArrayBlockingQueue<Long> out = new ArrayBlockingQueue<>(10000);
-        code[0] = 2L;
-        IntComputer cpu = new IntComputer(code, in, out);
-        ThreadPoolExecutor pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
-        pool.execute(cpu);
-        do {
-            Thread.sleep(100L);
-        } while (cpu.status() == IntComputer.Status.RUNNING);
-        fillMap(out);
-        printAlignment();
-        printMap(map);
-        Stack<Point> path = findPath();
-        assert path != null;
-        List<String> cmds = toCommands(path);
-        String cmdString = String.join(",", cmds);
-        String encoded = encode(cmdString);
-        List<String> partitions = partition(encoded, 20);
-        assert partitions != null;
-        partitions = partitions.stream().map(this::decode).collect(Collectors.toList());
-        List<String> commands = new ArrayList<>();
-        String left = cmdString.replaceAll(",", "");
-        while (left.length() > 0) {
-            if (left.startsWith(partitions.get(0))) {
-                commands.add("A");
-                left = left.substring(partitions.get(0).length());
-            } else if (left.startsWith(partitions.get(1))) {
-                commands.add("B");
-                left = left.substring(partitions.get(1).length());
-            } else if (left.startsWith(partitions.get(2))) {
-                commands.add("C");
-                left = left.substring(partitions.get(2).length());
-            } else {
-                throw new RuntimeException("Partitioning was wrong!");
-            }
-        }
-        List<String> subCommands = partitions.stream().map(this::toCommandList).collect(Collectors.toList());
-        putList(in, Arrays.toString(commands.toArray()).replaceAll("[ \\[\\]]", ""));
-        for (String subs : subCommands) {
-            putList(in, subs);
-        }
-        in.put((long) 'n');
-        in.put(10L);
-        do {
-            Thread.sleep(100L);
-        } while (cpu.status() == IntComputer.Status.RUNNING);
-
-        Long val = 0L;
-        while (out.peek() != null) {
-            val = out.poll();
-        }
-        System.out.println("Final score: " + val);
-        pool.shutdown();
-        pool.awaitTermination(100L, TimeUnit.SECONDS);
-    }
-
-    private void printAlignment() {
+    private int alignment() {
         List<Point> crossings = crossings();
         int alignment = 0;
         for (Point p : crossings) {
             alignment += p.x * p.y;
         }
-        System.out.println("Alignment: " + alignment);
+        return alignment;
     }
 
-    private void putList(ArrayBlockingQueue<Long> in, String cmds) throws InterruptedException {
-        for (char c : cmds.toCharArray()) {
+    private void putList(ArrayBlockingQueue<Long> in, String commands) throws InterruptedException {
+        for (char c : commands.toCharArray()) {
             in.put((long) (int) c);
         }
         in.put(10L);
@@ -127,6 +62,7 @@ public class Aoc17 {
         return sb.toString();
     }
 
+    @SuppressWarnings("SameParameterValue")
     private List<String> partition(String in, int maxLen) {
         List<String> splits = new ArrayList<>();
         String left = in;
@@ -343,6 +279,90 @@ public class Aoc17 {
         }
     }
 
+    @Override
+    public String part1() {
+        try {
+            ArrayBlockingQueue<Long> in = new ArrayBlockingQueue<>(1);
+            ArrayBlockingQueue<Long> out = new ArrayBlockingQueue<>(10000);
+            Long[] codeCopy = new Long[code.length];
+            System.arraycopy(code, 0, codeCopy, 0, code.length);
+            codeCopy[0] = 2L;
+            IntComputer cpu = new IntComputer(codeCopy, in, out);
+            cpu.setTimeout(100_000);
+            ThreadPoolExecutor pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
+            pool.execute(cpu);
+            do {
+                Thread.sleep(100L);
+            } while (cpu.status() == IntComputer.Status.RUNNING);
+            fillMap(out);
+            return Integer.toString(alignment());
+        } catch (Exception e) {
+            throw new RuntimeException("Error while doing simulation.", e);
+        }
+    }
+
+    @Override
+    public String part2() {
+        // The first step is to calibrate the cameras by getting the alignment parameters of some well-defined points. Locate all scaffold intersections; for each, its alignment parameter is the distance between its left edge and the left edge of the view multiplied by the distance between its top edge and the top edge of the view. Here, the intersections from the above image are marked O:
+        try {
+            ArrayBlockingQueue<Long> in = new ArrayBlockingQueue<>(1);
+            ArrayBlockingQueue<Long> out = new ArrayBlockingQueue<>(10000);
+            code[0] = 2L;
+            IntComputer cpu = new IntComputer(code, in, out);
+            cpu.setTimeout(100_000);
+            ThreadPoolExecutor pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
+            pool.execute(cpu);
+            do {
+                Thread.sleep(100L);
+            } while (cpu.status() == IntComputer.Status.RUNNING);
+            fillMap(out);
+            alignment();
+            Stack<Point> path = findPath();
+            assert path != null;
+            List<String> cmds = toCommands(path);
+            String cmdString = String.join(",", cmds);
+            String encoded = encode(cmdString);
+            List<String> partitions = partition(encoded, 20);
+            assert partitions != null;
+            partitions = partitions.stream().map(this::decode).collect(Collectors.toList());
+            List<String> commands = new ArrayList<>();
+            String left = cmdString.replaceAll(",", "");
+            while (left.length() > 0) {
+                if (left.startsWith(partitions.get(0))) {
+                    commands.add("A");
+                    left = left.substring(partitions.get(0).length());
+                } else if (left.startsWith(partitions.get(1))) {
+                    commands.add("B");
+                    left = left.substring(partitions.get(1).length());
+                } else if (left.startsWith(partitions.get(2))) {
+                    commands.add("C");
+                    left = left.substring(partitions.get(2).length());
+                } else {
+                    throw new RuntimeException("Partitioning was wrong!");
+                }
+            }
+            List<String> subCommands = partitions.stream().map(this::toCommandList).collect(Collectors.toList());
+            putList(in, Arrays.toString(commands.toArray()).replaceAll("[ \\[\\]]", ""));
+            for (String subs : subCommands) {
+                putList(in, subs);
+            }
+            in.put((long) 'n');
+            in.put(10L);
+            do {
+                Thread.sleep(100L);
+            } while (cpu.status() == IntComputer.Status.RUNNING);
+            Long val = 0L;
+            while (out.peek() != null) {
+                val = out.poll();
+            }
+            pool.shutdown();
+            pool.awaitTermination(30L, TimeUnit.SECONDS);
+            return Long.toString(val);
+        } catch (Exception e) {
+            throw new RuntimeException("Exception while running simulation.", e);
+        }
+    }
+
     private enum Turn {
         LEFT, RIGHT, FORWARD
     }
@@ -391,6 +411,7 @@ public class Aoc17 {
         }
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static List<Point> find(Map<Point, Character> map, char x) {
         List<Point> points = new ArrayList<>();
         for (Point p : map.keySet()) {
@@ -399,42 +420,5 @@ public class Aoc17 {
             }
         }
         return points;
-    }
-
-    private static void printMap(Map<Point, Character> map) {
-        System.out.print("\033[2J"); // Clear screen
-        int largestX = 0;
-        int largestY = 0;
-        for (Point p : map.keySet()) {
-            largestX = Math.max(p.x, largestX);
-            largestY = Math.max(p.y, largestY);
-        }
-        List<List<Character>> lines = emptyLines(largestX, largestY);
-        for (Point p : map.keySet()) {
-            lines.get(p.y).set(p.x, map.get(p));
-        }
-        render(lines);
-    }
-
-    private static List<List<Character>> emptyLines(int xMax, int yMax) {
-        List<List<Character>> lines = new ArrayList<>();
-        for (int row = 0; row <= yMax; row++) {
-            List<Character> r = new ArrayList<>();
-            for (int col = 0; col <= xMax; col++) {
-                r.add(' ');
-            }
-            lines.add(r);
-        }
-        return lines;
-    }
-
-    private static void render(List<List<Character>> lines) {
-        for (List<Character> row : lines) {
-            StringBuilder sb = new StringBuilder();
-            for (Character c : row) {
-                sb.append(c);
-            }
-            System.out.println(sb);
-        }
     }
 }
