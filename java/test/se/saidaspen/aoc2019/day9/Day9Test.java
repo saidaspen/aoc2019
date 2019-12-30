@@ -1,15 +1,29 @@
-package se.saidaspen.aoc2019.aoc09;
+package se.saidaspen.aoc2019.day9;
 
 import org.junit.Test;
 import se.saidaspen.aoc2019.IntComputer;
+import se.saidaspen.aoc2019.day8.Day8;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.*;
+import static se.saidaspen.aoc2019.AocUtil.input;
 
-public class IntComputerTest {
+@SuppressWarnings("ConstantConditions")
+public class Day9Test {
+
+    @Test
+    public void part1() throws IOException {
+        assertEquals("2171728567", new Day9(input(9)).part1());
+    }
+
+    @Test
+    public void part2() throws IOException {
+        assertEquals("49815", new Day9(input(9)).part2());
+    }
 
     @Test
     public void test_aoc05_1_less_than8() throws Exception {
@@ -23,7 +37,7 @@ public class IntComputerTest {
         in.put(7L);
         IntComputer cpu = new IntComputer(code, in, out);
         cpu.run();
-        assertTrue(999L == out.poll(1, TimeUnit.DAYS));
+        assertEquals(999L, (long) out.poll(1, TimeUnit.DAYS));
     }
 
     @Test
@@ -38,7 +52,7 @@ public class IntComputerTest {
         in.put(8L);
         IntComputer cpu = new IntComputer(code, in, out);
         cpu.run();
-        assertTrue(1000L == out.poll(1, TimeUnit.DAYS));
+        assertEquals(1000L, (long) out.poll(1, TimeUnit.DAYS));
     }
 
     @Test
@@ -53,7 +67,7 @@ public class IntComputerTest {
         in.put(9L);
         IntComputer cpu = new IntComputer(code, in, out);
         cpu.run();
-        assertTrue(1001L == out.poll(1, TimeUnit.DAYS));
+        assertEquals(1001L, (long) out.poll(1, TimeUnit.DAYS));
     }
 
     @Test
@@ -67,22 +81,22 @@ public class IntComputerTest {
         ArrayBlockingQueue<Long> out = new ArrayBlockingQueue<>(1000);
         IntComputer cpu = new IntComputer(code, in, out);
         cpu.run();
-        assertTrue(109 == out.poll(1, TimeUnit.DAYS));
-        assertTrue(1 == out.poll(1, TimeUnit.DAYS));
-        assertTrue(204 == out.poll(1, TimeUnit.DAYS));
-        assertTrue(-1 == out.poll(1, TimeUnit.DAYS));
-        assertTrue(1001 == out.poll(1, TimeUnit.DAYS));
-        assertTrue(100 == out.poll(1, TimeUnit.DAYS));
-        assertTrue(1 == out.poll(1, TimeUnit.DAYS));
-        assertTrue(100 == out.poll(1, TimeUnit.DAYS));
-        assertTrue(1008 == out.poll(1, TimeUnit.DAYS));
-        assertTrue(100 == out.poll(1, TimeUnit.DAYS));
-        assertTrue(16 == out.poll(1, TimeUnit.DAYS));
-        assertTrue(101 == out.poll(1, TimeUnit.DAYS));
-        assertTrue(1006 == out.poll(1, TimeUnit.DAYS));
-        assertTrue(101 == out.poll(1, TimeUnit.DAYS));
-        assertTrue(0 == out.poll(1, TimeUnit.DAYS));
-        assertTrue(99 == out.poll(1, TimeUnit.DAYS));
+        assertEquals(109L, (long) out.poll(1, TimeUnit.DAYS));
+        assertEquals(1L, (long) out.poll(1, TimeUnit.DAYS));
+        assertEquals(204L, (long) out.poll(1, TimeUnit.DAYS));
+        assertEquals(-1L, (long) out.poll(1, TimeUnit.DAYS));
+        assertEquals(1001L, (long) out.poll(1, TimeUnit.DAYS));
+        assertEquals(100L, (long) out.poll(1, TimeUnit.DAYS));
+        assertEquals(1L, (long) out.poll(1, TimeUnit.DAYS));
+        assertEquals(100L, (long) out.poll(1, TimeUnit.DAYS));
+        assertEquals(1008L, (long) out.poll(1, TimeUnit.DAYS));
+        assertEquals(100L, (long) out.poll(1, TimeUnit.DAYS));
+        assertEquals(16L, (long) out.poll(1, TimeUnit.DAYS));
+        assertEquals(101L, (long) out.poll(1, TimeUnit.DAYS));
+        assertEquals(1006L, (long) out.poll(1, TimeUnit.DAYS));
+        assertEquals(101L, (long) out.poll(1, TimeUnit.DAYS));
+        assertEquals(0L, (long) out.poll(1, TimeUnit.DAYS));
+        assertEquals(99L, (long) out.poll(1, TimeUnit.DAYS));
     }
 
     @Test
@@ -110,7 +124,7 @@ public class IntComputerTest {
         ArrayBlockingQueue<Long> out = new ArrayBlockingQueue<>(10);
         IntComputer cpu = new IntComputer(code, in, out);
         cpu.run();
-        assertTrue(1125899906842624L == out.poll(1, TimeUnit.DAYS));
+        assertEquals(1125899906842624L, (long) out.poll(1, TimeUnit.DAYS));
     }
 
 }

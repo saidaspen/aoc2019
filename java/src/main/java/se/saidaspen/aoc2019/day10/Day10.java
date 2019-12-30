@@ -1,38 +1,38 @@
-package se.saidaspen.aoc2019.aoc10;
+package se.saidaspen.aoc2019.day10;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import se.saidaspen.aoc2019.Day;
+import se.saidaspen.aoc2019.Point;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class Aoc10 {
+/**
+ * Solution to Advent of Code 2019 Day 10
+ * The original puzzle can be found here: https://adventofcode.com/2019/day/10
+ */
+public class Day10 implements Day {
 
     private int width;
     private int height;
+    private String input;
 
-    public Aoc10(int height, int width) {
+    public Day10(int height, int width) {
         this.height = height;
         this.width = width;
     }
 
-    public static void main(String[] args) throws IOException {
-        String input = new String(Files.readAllBytes(Paths.get(args[0])));
-        List<List<Integer>> map = detectMap(input);
-        Coord best = findBest(map);
-        System.out.println(String.format("Best spot is %s with value:%s", best, map.get(best.y).get(best.x)));
-        Coord shot200 = findShot(200, laserShootMap(input));
-        System.out.println(String.format("Part 2: %s", (shot200.x * 100) + shot200.y));
+    public Day10(String input) {
+        this.input = input;
     }
 
-    public static Coord findShot(int i, List<List<Integer>> laserShootMap) {
+    public static Point findShot(int i, List<List<Integer>> laserShootMap) {
         for (int row = 0; row < laserShootMap.size(); row++) {
             for (int col = 0; col < laserShootMap.get(0).size(); col++) {
                 if (laserShootMap.get(row).get(col) == i) {
-                    return new Coord(col, row);
+                    return Point.of(col, row);
                 }
             }
         }
@@ -41,21 +41,21 @@ public class Aoc10 {
 
     public static List<List<Integer>> laserShootMap(String input) {
         List<List<String>> map = mapOf(input);
-        Coord laserPos = getLaserPos(map);
+        Point laserPos = getLaserPos(map);
         if (laserPos == null) {
             List<List<Integer>> detectMap = detectMap(input);
             laserPos = findBest(detectMap);
         }
         int height = map.size();
         int width = map.get(0).size();
-        return new Aoc10(height, width).laser(laserPos, map);
+        return new Day10(height, width).laser(laserPos, map);
     }
 
     public static List<List<Integer>> detectMap(String input) {
         List<List<String>> map = mapOf(input);
         int height = map.size();
         int width = map.get(0).size();
-        return new Aoc10(height, width).detect(map);
+        return new Day10(height, width).detect(map);
     }
 
     private static List<List<String>> mapOf(String input) {
@@ -65,17 +65,17 @@ public class Aoc10 {
                 .collect(Collectors.toList());
     }
 
-    public List<List<Integer>> laser(Coord laserPos, List<List<String>> map) {
-        List<Coord> astroids = getAstroids(map);
+    public List<List<Integer>> laser(Point laserPos, List<List<String>> map) {
+        List<Point> astroids = getAstroids(map);
         List<List<Integer>> laserMap = emptyMap();
         int i = 1;
         while (!astroids.isEmpty()) {
             astroids.remove(laserPos);
-            List<Coord> detectableAstroids = getDetectable(laserPos, astroids);
-            detectableAstroids = detectableAstroids.stream()
+            List<Point> detectableAsteroids = getDetectable(laserPos, astroids);
+            detectableAsteroids = detectableAsteroids.stream()
                     .sorted(Comparator.comparingDouble(a -> angleOf(laserPos, a)))
                     .collect(Collectors.toList());
-            for (Coord a : detectableAstroids) {
+            for (Point a : detectableAsteroids) {
                 astroids.remove(a);
                 laserMap.get(a.y).set(a.x, i++);
             }
@@ -83,24 +83,24 @@ public class Aoc10 {
         return laserMap;
     }
 
-    public static double angleOf(Coord center, Coord to) {
+    public static double angleOf(Point center, Point to) {
         double radians = Math.atan2((to.y - center.y) * 1.0, (to.x - center.x) * 1.0);
         radians = (radians + 2 * Math.PI) % (2 * Math.PI); // Make positive
-        return (radians + Math.PI / 2) % (2 * Math.PI); // Translate to our coordinates
+        return (radians + Math.PI / 2) % (2 * Math.PI); // Translate to our Pointinates
     }
 
     public List<List<Integer>> detect(List<List<String>> map) {
-        List<Coord> astroids = getAstroids(map);
+        List<Point> astroids = getAstroids(map);
         List<List<Integer>> losMap = emptyMap();
-        for (Coord a : astroids) {
+        for (Point a : astroids) {
             losMap.get(a.y).set(a.x, getDetectable(a, astroids).size());
         }
         return losMap;
     }
 
-    private List<Coord> getDetectable(Coord from, List<Coord> astroids) {
-        List<Coord> detectable = new ArrayList<>();
-        for (Coord b : astroids) {
+    private List<Point> getDetectable(Point from, List<Point> astroids) {
+        List<Point> detectable = new ArrayList<>();
+        for (Point b : astroids) {
             if (!from.equals(b) && canDetect(from, b, astroids)) {
                 detectable.add(b);
             }
@@ -108,31 +108,31 @@ public class Aoc10 {
         return detectable;
     }
 
-    private static Coord getLaserPos(List<List<String>> map) {
+    private static Point getLaserPos(List<List<String>> map) {
         for (int y = 0; y < map.size(); y++) {
             for (int x = 0; x < map.get(0).size(); x++) {
                 if (map.get(y).get(x).equalsIgnoreCase("X")) {
-                    return new Coord(x, y);
+                    return Point.of(x, y);
                 }
             }
         }
         return null;
     }
 
-    private List<Coord> getAstroids(List<List<String>> map) {
-        List<Coord> astroids = new ArrayList<>();
+    private List<Point> getAstroids(List<List<String>> map) {
+        List<Point> astroids = new ArrayList<>();
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 if (map.get(y).get(x).equals("#")) {
-                    astroids.add(new Coord(x, y));
+                    astroids.add(Point.of(x, y));
                 }
             }
         }
         return astroids;
     }
 
-    private boolean canDetect(Coord from, Coord to, List<Coord> astroids) {
-        for (Coord betweenCandidate : astroids) {
+    private boolean canDetect(Point from, Point to, List<Point> astroids) {
+        for (Point betweenCandidate : astroids) {
             if (betweenCandidate == to || betweenCandidate == from)
                 continue;
             if (isBetween(betweenCandidate, from, to)) {
@@ -142,7 +142,7 @@ public class Aoc10 {
         return true;
     }
 
-    public boolean isBetween(Coord between, Coord from, Coord to) {
+    public boolean isBetween(Point between, Point from, Point to) {
         if (dist(from, between) == 0 || dist(to, between) == 0 || dist(from, between) >= dist(from, to)) {
             return false;
         }
@@ -165,7 +165,7 @@ public class Aoc10 {
         return i > 0 ? 1 : -1;
     }
 
-    public double dist(Coord base, Coord cand) {
+    public double dist(Point base, Point cand) {
         return Math.sqrt(Math.pow((base.x - cand.x), 2.0) + Math.pow((base.y - cand.y), 2));
     }
 
@@ -181,17 +181,30 @@ public class Aoc10 {
         return losMap;
     }
 
-    public static Coord findBest(List<List<Integer>> map) {
+    public static Point findBest(List<List<Integer>> map) {
         int num = 0;
-        Coord bestSpot = null;
+        Point bestSpot = null;
         for (int y = 0; y < map.size(); y++) {
             for (int x = 0; x < map.size(); x++) {
                 if (map.get(y).get(x) > num) {
                     num = map.get(y).get(x);
-                    bestSpot = new Coord(x, y);
+                    bestSpot = Point.of(x, y);
                 }
             }
         }
         return bestSpot;
+    }
+
+    @Override
+    public String part1() {
+        List<List<Integer>> map = detectMap(input);
+        Point best = findBest(map);
+        return Integer.toString(map.get(best.y).get(best.x));
+    }
+
+    @Override
+    public String part2() {
+        Point shot200 = findShot(200, laserShootMap(input));
+        return Integer.toString((shot200.x * 100) + shot200.y);
     }
 }

@@ -1,6 +1,7 @@
-package se.saidaspen.aoc2019.aoc12;
+package se.saidaspen.aoc2019.day12;
 
-import se.saidaspen.aoc2019.aoc09.Aoc09;
+
+import se.saidaspen.aoc2019.Day;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -9,7 +10,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-final class Aoc12 {
+/**
+ * Solution to Advent of Code 2019 Day 12
+ * The original puzzle can be found here: https://adventofcode.com/2019/day/12
+ */
+final class Day12 implements Day {
 
     private final List<Moon> moons;
     private static final int X = 0;
@@ -17,10 +22,10 @@ final class Aoc12 {
     private static final int Z = 2;
 
     public static void main(String[] args) throws IOException {
-        System.out.println(new Aoc12(new String(Files.readAllBytes(Paths.get(args[0])))).getSystemPeriod());
+        System.out.println(new Day12(new String(Files.readAllBytes(Paths.get(args[0])))).getSystemPeriod());
     }
 
-    Aoc12(String input) {
+    Day12(String input) {
         moons = Arrays.stream(input.split("\n"))
                 .map(l -> l.replaceAll("[<>=xyz ]", ""))
                 .map(l -> l.split(","))
@@ -87,6 +92,16 @@ final class Aoc12 {
 
     private static long lcm(long number1, long number2) {
         return (number1 == 0 || number2 == 0) ? 0 : Math.abs(number1 * number2) / gcd(number1, number2);
+    }
+
+    @Override
+    public String part1() {
+        return Long.toString(getSystemEnergy(1000));
+    }
+
+    @Override
+    public String part2() {
+        return Long.toString(getSystemPeriod());
     }
 
     private static final class Moon implements Cloneable {

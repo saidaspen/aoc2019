@@ -16,7 +16,7 @@ import static se.saidaspen.aoc2019.AocUtil.toLongCode;
 
 /**
  * Solution to Advent of Code 2019 Day 7
- * The original puzzle can be found here: https://adventofcode.com/2019/day/4
+ * The original puzzle can be found here: https://adventofcode.com/2019/day/7
  * <p>
  * Here is the accompanying poem:
  * <p>
@@ -30,7 +30,6 @@ import static se.saidaspen.aoc2019.AocUtil.toLongCode;
  * a trick, a hack — let's call it that
  * tonight we are off – tonight we fly
  */
-
 public class Day7 implements Day {
 
     private final Long[] code;

@@ -1,91 +1,94 @@
-package se.saidaspen.aoc2019.aoc14;
+package se.saidaspen.aoc2019.day14;
 
 import org.junit.Test;
+import se.saidaspen.aoc2019.AocUtil;
+
+import java.io.IOException;
 
 import static org.junit.Assert.*;
 
-public class Aoc14Test {
+public class Day14Test {
 
     @Test
     public void oreDirect() {
-        Aoc14 app = new Aoc14("1 ORE => 1 FUEL");
-        assertEquals(1, app.oreNeededFor(new Ingredient(1, "ORE")));
+        Day14 app = new Day14("1 ORE => 1 FUEL");
+        assertEquals(1, app.oreNeededFor(new Day14.Ingredient(1, "ORE")));
     }
 
     @Test
     public void oreToFuelDirect() {
-        Aoc14 app = new Aoc14("1 ORE => 1 FUEL");
-        assertEquals(1, app.oreNeededFor(new Ingredient(1, "FUEL")));
+        Day14 app = new Day14("1 ORE => 1 FUEL");
+        assertEquals(1, app.oreNeededFor(new Day14.Ingredient(1, "FUEL")));
     }
 
     @Test
     public void multipleOreToFuelDirect() {
-        Aoc14 app = new Aoc14("2 ORE => 1 FUEL");
-        assertEquals(2, app.oreNeededFor(new Ingredient(1, "FUEL")));
+        Day14 app = new Day14("2 ORE => 1 FUEL");
+        assertEquals(2, app.oreNeededFor(new Day14.Ingredient(1, "FUEL")));
     }
 
     @Test
     public void oneIndirect() {
-        Aoc14 app = new Aoc14("1 ORE => 1 A" +
+        Day14 app = new Day14("1 ORE => 1 A" +
                 "1 A => 1 FUEL");
-        assertEquals(1, app.oreNeededFor(new Ingredient(1, "FUEL")));
+        assertEquals(1, app.oreNeededFor(new Day14.Ingredient(1, "FUEL")));
     }
 
     @Test
     public void multipleIndirect() {
-        Aoc14 app = new Aoc14("2 ORE => 1 A \n 1 A => 1 FUEL");
-        assertEquals(2, app.oreNeededFor(new Ingredient(1, "FUEL")));
-        app = new Aoc14("1 ORE => 1 A \n 2 A => 1 FUEL");
-        assertEquals(2, app.oreNeededFor(new Ingredient(1, "FUEL")));
+        Day14 app = new Day14("2 ORE => 1 A \n 1 A => 1 FUEL");
+        assertEquals(2, app.oreNeededFor(new Day14.Ingredient(1, "FUEL")));
+        app = new Day14("1 ORE => 1 A \n 2 A => 1 FUEL");
+        assertEquals(2, app.oreNeededFor(new Day14.Ingredient(1, "FUEL")));
     }
 
     @Test
     public void multipleSteps() {
-        Aoc14 app = new Aoc14("1 ORE => 1 A \n 1 A => 1 B \n 1 B => 1 FUEL");
-        assertEquals(1, app.oreNeededFor(new Ingredient(1, "FUEL")));
-        app = new Aoc14("1 ORE => 1 A \n 1 A => 1 C \n 1 C => 1 FUEL");
-        assertEquals(1, app.oreNeededFor(new Ingredient(1, "FUEL")));
+        Day14 app = new Day14("1 ORE => 1 A \n 1 A => 1 B \n 1 B => 1 FUEL");
+        assertEquals(1, app.oreNeededFor(new Day14.Ingredient(1, "FUEL")));
+        app = new Day14("1 ORE => 1 A \n 1 A => 1 C \n 1 C => 1 FUEL");
+        assertEquals(1, app.oreNeededFor(new Day14.Ingredient(1, "FUEL")));
     }
 
     @Test
     public void multipleStepsMultipleIndirect() {
-        Aoc14 app = new Aoc14("2 ORE => 1 A \n 3 A => 2 B \n 2 B => 1 FUEL");
-        assertEquals(6, app.oreNeededFor(new Ingredient(1, "FUEL")));
+        Day14 app = new Day14("2 ORE => 1 A \n 3 A => 2 B \n 2 B => 1 FUEL");
+        assertEquals(6, app.oreNeededFor(new Day14.Ingredient(1, "FUEL")));
     }
 
     @Test
     public void multipleReagents() {
-        Aoc14 app = new Aoc14("1 ORE => 1 A \n 1 ORE  => 1 B \n 1 A, 2 B => 1 FUEL");
-        assertEquals(3, app.oreNeededFor(new Ingredient(1, "FUEL")));
+        Day14 app = new Day14("1 ORE => 1 A \n 1 ORE  => 1 B \n 1 A, 2 B => 1 FUEL");
+        assertEquals(3, app.oreNeededFor(new Day14.Ingredient(1, "FUEL")));
     }
 
 
     @Test
     public void givenExample1() {
-        Aoc14 app = new Aoc14("10 ORE => 10 A\n" +
+        Day14 app = new Day14("10 ORE => 10 A\n" +
                 "1 ORE => 1 B\n" +
                 "7 A, 1 B => 1 C\n" +
                 "7 A, 1 C => 1 D\n" +
                 "7 A, 1 D => 1 E\n" +
                 "7 A, 1 E => 1 FUEL");
-        assertEquals(31, app.oreNeededFor(new Ingredient(1, "FUEL")));
+        assertEquals(31, app.oreNeededFor(new Day14.Ingredient(1, "FUEL")));
     }
 
     @Test
     public void givenExample2() {
-        Aoc14 app = new Aoc14("9 ORE => 2 A\n" +
+        Day14 app = new Day14("9 ORE => 2 A\n" +
                 "8 ORE => 3 B\n" +
                 "7 ORE => 5 C\n" +
                 "3 A, 4 B => 1 AB\n" +
                 "5 B, 7 C => 1 BC\n" +
                 "4 C, 1 A => 1 CA\n" +
                 "2 AB, 3 BC, 4 CA => 1 FUEL");
-        assertEquals(165, app.oreNeededFor(new Ingredient(1, "FUEL")));
+        assertEquals(165, app.oreNeededFor(new Day14.Ingredient(1, "FUEL")));
     }
 
     @Test
     public void givenExample3() {
-        Aoc14 app = new Aoc14("157 ORE => 5 NZVS\n" +
+        Day14 app = new Day14("157 ORE => 5 NZVS\n" +
                 "165 ORE => 6 DCFZ\n" +
                 "44 XJWVT, 5 KHKGT, 1 QDVJ, 29 NZVS, 9 GPVTF, 48 HKGWZ => 1 FUEL\n" +
                 "12 HKGWZ, 1 GPVTF, 8 PSHF => 9 QDVJ\n" +
@@ -94,12 +97,12 @@ public class Aoc14Test {
                 "7 DCFZ, 7 PSHF => 2 XJWVT\n" +
                 "165 ORE => 2 GPVTF\n" +
                 "3 DCFZ, 7 NZVS, 5 HKGWZ, 10 PSHF => 8 KHKGT");
-        assertEquals(13312, app.oreNeededFor(new Ingredient(1, "FUEL")));
+        assertEquals(13312, app.oreNeededFor(new Day14.Ingredient(1, "FUEL")));
     }
 
     @Test
     public void givenExample4() {
-        Aoc14 app = new Aoc14("2 VPVL, 7 FWMGM, 2 CXFTF, 11 MNCFX => 1 STKFG\n" +
+        Day14 app = new Day14("2 VPVL, 7 FWMGM, 2 CXFTF, 11 MNCFX => 1 STKFG\n" +
                 "17 NVRVD, 3 JNWZP => 8 VPVL\n" +
                 "53 STKFG, 6 MNCFX, 46 VJHF, 81 HVMC, 68 CXFTF, 25 GNMV => 1 FUEL\n" +
                 "22 VJHF, 37 MNCFX => 5 FWMGM\n" +
@@ -111,12 +114,12 @@ public class Aoc14Test {
                 "1 NVRVD => 8 CXFTF\n" +
                 "1 VJHF, 6 MNCFX => 4 RFSQX\n" +
                 "176 ORE => 6 VJHF");
-        assertEquals(180697, app.oreNeededFor(new Ingredient(1, "FUEL")));
+        assertEquals(180697, app.oreNeededFor(new Day14.Ingredient(1, "FUEL")));
     }
 
     @Test
     public void givenExample5() {
-        Aoc14 app = new Aoc14("171 ORE => 8 CNZTR\n" +
+        Day14 app = new Day14("171 ORE => 8 CNZTR\n" +
                 "7 ZLQW, 3 BMBT, 9 XCVML, 26 XMNCP, 1 WPTQ, 2 MZWV, 1 RJRHP => 4 PLWSL\n" +
                 "114 ORE => 4 BHXH\n" +
                 "14 VRPVC => 6 BMBT\n" +
@@ -133,12 +136,12 @@ public class Aoc14Test {
                 "121 ORE => 7 VRPVC\n" +
                 "7 XCVML => 6 RJRHP\n" +
                 "5 BHXH, 4 VRPVC => 5 LTCX");
-        assertEquals(2210736, app.oreNeededFor(new Ingredient(1, "FUEL")));
+        assertEquals(2210736, app.oreNeededFor(new Day14.Ingredient(1, "FUEL")));
     }
 
     @Test
     public void part2Example1() {
-        Aoc14 app = new Aoc14("157 ORE => 5 NZVS\n" +
+        Day14 app = new Day14("157 ORE => 5 NZVS\n" +
                 "165 ORE => 6 DCFZ\n" +
                 "44 XJWVT, 5 KHKGT, 1 QDVJ, 29 NZVS, 9 GPVTF, 48 HKGWZ => 1 FUEL\n" +
                 "12 HKGWZ, 1 GPVTF, 8 PSHF => 9 QDVJ\n" +
@@ -152,7 +155,7 @@ public class Aoc14Test {
 
     @Test
     public void part2Example2() {
-        Aoc14 app = new Aoc14("2 VPVL, 7 FWMGM, 2 CXFTF, 11 MNCFX => 1 STKFG\n" +
+        Day14 app = new Day14("2 VPVL, 7 FWMGM, 2 CXFTF, 11 MNCFX => 1 STKFG\n" +
                 "17 NVRVD, 3 JNWZP => 8 VPVL\n" +
                 "53 STKFG, 6 MNCFX, 46 VJHF, 81 HVMC, 68 CXFTF, 25 GNMV => 1 FUEL\n" +
                 "22 VJHF, 37 MNCFX => 5 FWMGM\n" +
@@ -169,7 +172,7 @@ public class Aoc14Test {
 
     @Test
     public void part2Example3() {
-        Aoc14 app = new Aoc14("171 ORE => 8 CNZTR\n" +
+        Day14 app = new Day14("171 ORE => 8 CNZTR\n" +
                 "7 ZLQW, 3 BMBT, 9 XCVML, 26 XMNCP, 1 WPTQ, 2 MZWV, 1 RJRHP => 4 PLWSL\n" +
                 "114 ORE => 4 BHXH\n" +
                 "14 VRPVC => 6 BMBT\n" +
@@ -191,7 +194,7 @@ public class Aoc14Test {
 
     @Test
     public void part2Example0() {
-        Aoc14 app = new Aoc14("10 ORE => 10 A\n" +
+        Day14 app = new Day14("10 ORE => 10 A\n" +
                 "1 ORE => 1 B\n" +
                 "7 A, 1 B => 1 C\n" +
                 "7 A, 1 C => 1 D\n" +
@@ -202,4 +205,18 @@ public class Aoc14Test {
         assertEquals(1, app.maximumFuel(31L));
         assertEquals(0, app.maximumFuel(30L));
     }
+
+    @Test
+    public void part1() throws IOException {
+        Day14 app = new Day14(AocUtil.input(14));
+        assertEquals("504284", app.part1());
+    }
+
+    @Test
+    public void part2() throws IOException {
+        Day14 app = new Day14(AocUtil.input(14));
+        assertEquals("2690795", app.part2());
+    }
+
+
 }

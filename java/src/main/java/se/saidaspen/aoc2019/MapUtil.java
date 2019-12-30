@@ -6,7 +6,7 @@ import java.util.Map;
 
 public class MapUtil {
 
-    private static void printMap(Map<Point, Character> map) {
+    public static void printMap(Map<Point, Character> map) {
         System.out.print("\033[2J"); // Clear screen
         int largestX = 0;
         int largestY = 0;
