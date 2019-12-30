@@ -1,18 +1,17 @@
 package se.saidaspen.aoc2019.day7;
 
 import se.saidaspen.aoc2019.Day;
-import se.saidaspen.aoc2019.IntComputer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.*;
-import java.util.stream.IntStream;
-import java.util.stream.LongStream;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 import static java.util.Collections.swap;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.LongStream.rangeClosed;
 import static se.saidaspen.aoc2019.AocUtil.toLongCode;
 
 /**
@@ -34,8 +33,6 @@ import static se.saidaspen.aoc2019.AocUtil.toLongCode;
 
 public class Day7 implements Day {
 
-    private static final int PHASE_MIN = 0;
-    private static final int PHASE_MAX = 4;
     private final Long[] code;
 
     public Day7(String input) {
@@ -44,19 +41,18 @@ public class Day7 implements Day {
 
     @Override
     public String part1() {
-        return Long.toString(run(false));
+        List<List<Long>> permutations = getPermutations(rangeClosed(0, 4).boxed().collect(toList()), 0);
+        return Long.toString(permutations.parallelStream()
+                .mapToLong(i -> findLargestThrust(code, i, false)).max()
+                .orElseThrow(() -> new RuntimeException("Unable to find a maximum value")));
     }
 
     @Override
     public String part2() {
-        return Long.toString(run(true));
-    }
-
-    private long run(boolean useFeedback) {
-        List<List<Long>> permutations = getPermutations(LongStream.range(PHASE_MIN, PHASE_MAX + 1).boxed().collect(toList()), 0);
-        return permutations.parallelStream()
-                .mapToLong(i -> findLargestThrust(code, i, useFeedback)).max()
-                .orElseThrow(() -> new RuntimeException("Unable to find a maximum value"));
+        List<List<Long>> permutations = getPermutations(rangeClosed(5, 9).boxed().collect(toList()), 0);
+        return Long.toString(permutations.parallelStream()
+                .mapToLong(i -> findLargestThrust(code, i, true)).max()
+                .orElseThrow(() -> new RuntimeException("Unable to find a maximum value")));
     }
 
     private static List<List<Long>> getPermutations(List<Long> arr, int k) {
@@ -74,8 +70,7 @@ public class Day7 implements Day {
 
     public static Long findLargestThrust(Long[] code, List<Long> phases, boolean useFeedback) {
         try {
-            ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(5);
-            List<BlockingQueue<Long>> wires = IntStream.range(0, phases.size() + 1)
+            List<BlockingQueue<Long>> wires = rangeClosed(0, phases.size())
                     .mapToObj(c -> new ArrayBlockingQueue<Long>(10_000))
                     .collect(toList());
             if (useFeedback) {
@@ -85,27 +80,31 @@ public class Day7 implements Day {
             List<Amp> amps = new LinkedList<>();
             for (int i = 0; i < phases.size(); i++) {
                 wires.get(i).put(phases.get(i));
-                //amps.add(new Amp(code, wires.get(i), wires.get(i + 1)));
-                executor.execute(new Amp(code, wires.get(i), wires.get(i + 1)));
+                amps.add(new Amp(code, wires.get(i), wires.get(i + 1)));
             }
             wires.get(0).put(0L); // Initial Input
-            executor.shutdown();
-            executor.awaitTermination(1L, TimeUnit.DAYS);
-            return wires.get(wires.size() - 1).poll(10L, TimeUnit.DAYS);
+            boolean allDone = false;
+            while (!allDone) {
+                allDone = true;
+                for (Amp amp : amps) {
+                    if (amp.isRunnable()) {
+                        allDone = false;
+                        amp.run();
+                    }
+                }
+            }
+            return amps.get(4).lastSent;
         } catch (Throwable t) {
             throw new RuntimeException(t);
         }
     }
 
-    private static class Amp implements Runnable {
-        public boolean isRunnable() {
-            return status == Status.RUNNABLE || (!in.isEmpty() && status == Status.WAITING);
-        }
+    private static class Amp {
 
-        public enum Status {RUNNABLE, RUNNING, HALTED, WAITING}
-
+        public enum Status {RUNNABLE, HALTED, WAITING}
         private Status status = Status.RUNNABLE;
         private final Long[] code;
+        private Long lastSent = 0L;
         private int pc = 0;
         private final BlockingQueue<Long> in;
         private final BlockingQueue<Long> out;
@@ -116,23 +115,33 @@ public class Day7 implements Day {
             this.out = out;
         }
 
+        public boolean isRunnable() {
+            return status == Status.RUNNABLE || (!in.isEmpty() && status == Status.WAITING);
+        }
+
         public void run() {
             try {
-                do {
+                while (true) {
                     String cmd = String.format("%05d", code[pc]);
                     int opCode = Integer.parseInt(cmd.substring(3));
+                    if (opCode == /*HALT*/ 99) {
+                        status = Status.HALTED;
+                        return;
+                    }
                     if (opCode == /*INPUT*/ 3) {
-                        status = Status.WAITING;
-                        Long inputVal = in.poll(10L, TimeUnit.DAYS);
-                        System.out.println("Got input: " + inputVal);
-                        code[code[pc + 1].intValue()] = inputVal;
+                        Long inputVal = in.poll();
+                        if (inputVal == null) {
+                            status = Status.WAITING;
+                            return;
+                        }
                         status = Status.RUNNABLE;
+                        code[code[pc + 1].intValue()] = inputVal;
                         pc += 2;
                         continue;
                     } else if (opCode == /*OUTPUT*/ 4) {
                         long outVal = code[code[pc + 1].intValue()];
-                        System.out.println("Sending output: " + outVal);
                         out.put(outVal);
+                        lastSent = outVal;
                         pc += 2;
                         continue;
                     }
@@ -155,7 +164,7 @@ public class Day7 implements Day {
                         code[code[pc + 3].intValue()] = param1 == param2 ? 1L : 0L;
                         pc += 4;
                     }
-                } while (code[pc] != 99);
+                }
             } catch (Throwable t) {
                 throw new RuntimeException(t);
             }

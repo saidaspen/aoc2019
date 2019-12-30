@@ -1,7 +1,6 @@
 package se.saidaspen.aoc2019.day7;
 
 import org.junit.Test;
-import se.saidaspen.aoc2019.AocUtil;
 
 import java.io.IOException;
 
