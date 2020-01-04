@@ -1,102 +1,99 @@
 package se.saidaspen.aoc2019.day22;
 
-import se.saidaspen.aoc2019.AocUtil;
+import lombok.Value;
 import se.saidaspen.aoc2019.Day;
 
-import static java.math.BigInteger.ONE;
-import static java.math.BigInteger.ZERO;
-
 import java.math.BigInteger;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
+import static java.math.BigInteger.*;
+
+@Value
 public final class Day22 implements Day {
-
-    public static final BigInteger TWO = BigInteger.valueOf(2);
     private final String input;
-    private BigInteger shuffles;
-    private BigInteger numCards;
+    private final BigInteger numCards;
+    private final BigInteger shuffles;
 
-
-    Day22(String input, Integer numCards) {
-        this(input, BigInteger.valueOf(numCards), BigInteger.ONE);
+    
+    public static abstract class LinearFunction {
+        abstract BigInteger k();
+        abstract BigInteger m();
     }
 
-    Day22(String input, BigInteger numCards) {
-        this(input, numCards, BigInteger.ONE);
+    private static final LinearFunction ID = new LinearFunction() {
+        @Override BigInteger k() { return ONE; }
+        @Override BigInteger m() { return ZERO; }
+    };
+
+    /** Aggregate two functions f(x) and g(x) to create a new function h(x)=g(f(x)) */
+    private LinearFunction agg(LinearFunction f, LinearFunction g) {
+        // Let f(x)=k*x+m and g(x)=j*x+n, then h(x)=g(f(x))=Ax+B=j*(k*x+m)+n=j*k*x+(j*m+n) => A=j*k, B=j*m+n
+        return new LinearFunction() {
+            @Override BigInteger k() { return g.k().multiply(f.k()); }
+            @Override BigInteger m() { return g.k().multiply(f.m()).add(g.m());}
+        };
     }
 
-    Day22(String input, BigInteger numCards, BigInteger shuffles) {
-        this.numCards = numCards;
-        this.input = input;
-        this.shuffles = shuffles;
+    public String part1() { return positionOf(valueOf(2019)).toString(); }
+    public String part2() { return cardAt(valueOf(2020)).toString(); }
+
+    BigInteger positionOf(BigInteger in) {
+        LinearFunction shuffleFunc = Arrays.stream(input.split(System.lineSeparator()))
+                .filter(s -> !"".equalsIgnoreCase(s))
+                .map(s -> funcOf(s, false))
+                .reduce(ID, this::agg);
+        BigInteger[] ab = performShuffle(shuffleFunc.k(), shuffleFunc.m(), shuffles);
+        return in.multiply(ab[0]).add(ab[1]).mod(numCards);
     }
 
-    public String part1() {
-        return positionOf(BigInteger.valueOf(2019)).toString();
+    BigInteger cardAt(BigInteger in) {
+        LinearFunction shuffle = reverse(Arrays.stream(input.split(System.lineSeparator()))
+                .filter(s -> !"".equalsIgnoreCase(s))
+                .map(s -> funcOf(s, true))).reduce(ID, this::agg);
+        BigInteger[] ab = performShuffle(shuffle.k(), shuffle.m(), shuffles);
+        return in.multiply(ab[0]).add(ab[1]).mod(numCards);
     }
 
-    BigInteger positionOf(BigInteger start) {
-        BigInteger result = start;
-        String[] lines = input.split(System.lineSeparator());
-        for (int i = 0; i < shuffles.intValue(); i++) {
-            for (String line : lines) {
-                if (line.startsWith("deal into new stack")) {
-                    result = numCards.subtract(result).subtract(ONE);
-                } else if (line.startsWith("cut")) {
-                    BigInteger n = new BigInteger(line.split(" ")[1]);
-                    BigInteger move = n.mod(numCards);
-                    result = (result.compareTo(move) < 0) ? result.subtract(move).add(numCards) : result.subtract(move);
-                } else if (line.startsWith("deal with")) {
-                    BigInteger n = new BigInteger(line.replaceAll("deal with increment ", ""));
-                    result = result.multiply(n).mod(numCards);
-                } else if (line.length() > 0) {
-                    throw new UnsupportedOperationException(line);
-                }
-            }
+    public static <T> Stream<T> reverse(Stream<T> stream) {
+        Iterable<T> iterable = () -> stream.collect(Collectors.toCollection(LinkedList::new)).descendingIterator();
+        return StreamSupport.stream(iterable.spliterator(), false);
+    }
+
+    private LinearFunction funcOf(String s, boolean cardAt) {
+        if (s.startsWith("deal into new stack")) {
+            return new LinearFunction() {
+                public BigInteger k() { return ONE.negate(); }
+                public BigInteger m() { return ONE.negate().subtract(numCards); }
+            };
+        } else if (s.startsWith("cut")) {
+            BigInteger n = new BigInteger(s.split(" ")[1]);
+            return new LinearFunction() {
+                @Override public BigInteger k() { return ONE; }
+                @Override public BigInteger m() { return cardAt ? n.mod(numCards) : n.mod(numCards).negate(); }
+            };
         }
-        return result;
+        else if (s.startsWith("deal with increment")) {
+            BigInteger n = new BigInteger(s.replaceAll("deal with increment ", ""));
+            BigInteger z = n.modInverse(numCards);
+            return new LinearFunction() {
+                @Override public BigInteger k() { return cardAt ? ONE.multiply(z).mod(numCards) : n; }
+                @Override public BigInteger m() { return ZERO; }
+            };
+        }
+        throw new RuntimeException(String.format("Unsupported operation '%s'", s));
     }
 
-    public String part2() {
-        BigInteger pos = BigInteger.valueOf(2020);
-        String[] lines = input.split(System.lineSeparator());
-        String[] reversed = new String[lines.length];
-        for (int i = 0; i < lines.length; i++) {
-            reversed[i] = lines[lines.length - i - 1];
-        }
-        BigInteger a = ONE;
-        BigInteger b = ZERO;
-        for (String line : reversed) {
-            if (line.startsWith("deal into new stack")) {
-                a = a.negate();
-                b = numCards.subtract(b).subtract(ONE);
-            } else if (line.startsWith("cut")) {
-                BigInteger n = new BigInteger(line.split(" ")[1]);
-                b = b.add(n).mod(numCards);
-            } else if (line.startsWith("deal with")) {
-                BigInteger n = new BigInteger(line.replaceAll("deal with increment ", ""));
-                BigInteger z = n.modInverse(numCards);
-                a = a.multiply(z).mod(numCards);
-                b = b.multiply(z).mod(numCards);
-            } else if (line.length() > 0) {
-                throw new UnsupportedOperationException(line);
-            }
-        }
-        BigInteger[] ab = polyPow(a, b, shuffles, numCards);
-        return pos.multiply(ab[0]).add(ab[1]).mod(numCards).toString();
-    }
-
-    private BigInteger[] polyPow(BigInteger a, BigInteger b, BigInteger shuffles, BigInteger numCards) {
-        if (shuffles.equals(ZERO)) {
+    private BigInteger[] performShuffle(BigInteger a, BigInteger b, BigInteger nShuffles) {
+        if (nShuffles.equals(ZERO)) {
             return new BigInteger[]{ONE, ZERO}; //1,0
-        } else if (shuffles.mod(TWO).equals(ZERO)) {
-            return polyPow(a.multiply(a).mod(numCards), a.multiply(b).add(b).mod(numCards), shuffles.divide(TWO), numCards); // return
+        } else if (nShuffles.mod(TWO).equals(ZERO)) {
+            return performShuffle(a.multiply(a).mod(numCards), a.multiply(b).add(b).mod(numCards), nShuffles.divide(TWO));
         } else {
-            BigInteger[] cd = polyPow(a, b, shuffles.subtract(ONE), numCards);
+            BigInteger[] cd = performShuffle(a, b, nShuffles.subtract(ONE));
             return new BigInteger[]{a.multiply(cd[0]).mod(numCards), a.multiply(cd[1]).add(b).mod(numCards)};
         }
-    }
-
-    public int positionOf(int i) {
-        return positionOf(BigInteger.valueOf(i)).intValue();
     }
 }
