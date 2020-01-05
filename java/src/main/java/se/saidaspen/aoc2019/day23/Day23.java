@@ -1,10 +1,9 @@
-package se.saidaspen.aoc2019.aoc23;
+package se.saidaspen.aoc2019.day23;
 
+import lombok.Value;
+import se.saidaspen.aoc2019.Day;
 import se.saidaspen.aoc2019.IntComputer;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.time.LocalTime;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -13,44 +12,64 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import static java.time.temporal.ChronoUnit.MILLIS;
 
-public final class Aoc23 {
+/**
+ * Solution to Advent of Code 2019 Day 23
+ * The original puzzle can be found here: https://adventofcode.com/2019/day/23
+ * */
+public final class Day23 implements Day {
 
-    private String code;
+    private final String code;
 
-    public static void main(String[] args) throws IOException, InterruptedException {
-        Aoc23 app = new Aoc23(new String(Files.readAllBytes(Paths.get(args[0]))));
-        app.run();
+    private static abstract class Control {
+        Long val;
+        abstract void accept(Long val);
+        boolean shouldContinue() {return val == null;}
     }
 
-    private Aoc23(String input) {
-        this.code = input;
+    Day23(String input) { this.code = input; }
+
+    private void run(Control spy) {
+        try {
+            // Setup computers
+            IntComputer[] cpus = new IntComputer[50];
+            for (int i = 0; i < 50; i++) {
+                cpus[i] = new IntComputer(code);
+                cpus[i].in().put((long) i); // Set network address
+            }
+            // Setup Network devices
+            NAT nat = new NAT(cpus, spy);
+            NetworkSwitch networkSwitch = new NetworkSwitch(cpus, nat);
+            // Start Network, each device runs in its own thread.
+            ThreadPoolExecutor pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(cpus.length + 2);
+            pool.execute(networkSwitch);
+            pool.execute(nat);
+            for (int i = 0; i < 50; i++) {
+                pool.execute(cpus[i]);
+            }
+            pool.shutdown();
+            // Wait until devices threads are finished, or timeout.
+            pool.awaitTermination(5L, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            throw new RuntimeException("Unexpectedly interrupted.", e);
+        }
     }
 
-    @SuppressWarnings("unused")
-    private void run() throws InterruptedException {
-        // Setup computers
-        IntComputer[] cpus = new IntComputer[50];
-        for (int i = 0; i < 50; i++) {
-            cpus[i] = new IntComputer(code);
-            cpus[i].in().put((long) i); // Set network address
-        }
+    @Override public String part1() {
+        Control spy = new Control() {public void accept(Long l) { if (val == null) val = l; }};
+        run(spy);
+        return spy.val.toString();
+    }
 
-        // Setup Network devices
-        NAT nat = new NAT(cpus);
-        NetworkSwitch networkSwitch = new NetworkSwitch(cpus, nat);
-
-        // Start Network.
-        // Each device runs in its own thread.
-        ThreadPoolExecutor pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(cpus.length + 2);
-        pool.execute(networkSwitch);
-        pool.execute(nat);
-        for (int i = 0; i < 50; i++) {
-            pool.execute(cpus[i]);
-        }
-        pool.shutdown();
-
-        // Wait until devices threads are finished, or timeout.
-        pool.awaitTermination(10L, TimeUnit.SECONDS);
+    @Override public String part2() {
+        Control spy = new Control() {
+            Long lastY = null;
+            public void accept(Long l) {
+                if (l.equals(lastY) && val == null) val = l;
+                lastY = l;
+            }
+        };
+        run(spy);
+        return spy.val.toString();
     }
 
     /**
@@ -58,14 +77,9 @@ public final class Aoc23 {
      * Reads everything computers send out, and routes it to the address specified.
      * Address 255 is reserved for the Network NAT (Not Always Transmitting).
      */
-    private static class NetworkSwitch implements Runnable {
+    @Value private static class NetworkSwitch implements Runnable {
         private final IntComputer[] computers;
         private final NAT nat;
-
-        public NetworkSwitch(IntComputer[] computers, NAT nat) {
-            this.computers = computers;
-            this.nat = nat;
-        }
 
         @Override
         public void run() {
@@ -74,8 +88,8 @@ public final class Aoc23 {
                     Long addr = computer.out().poll();
                     if (addr != null) {
                         try {
-                            Long x = computer.out().poll(500, TimeUnit.MILLISECONDS);
-                            Long y = computer.out().poll(500, TimeUnit.MILLISECONDS);
+                            Long x = computer.out().poll(20, TimeUnit.MILLISECONDS);
+                            Long y = computer.out().poll(20, TimeUnit.MILLISECONDS);
                             if (x == null || y == null) {
                                 System.err.println("Timed out waiting for data.");
                                 return;
@@ -103,17 +117,18 @@ public final class Aoc23 {
      * the last package received to network address 0;
      */
     private static class NAT implements Runnable {
-        public static final long IDLE_LIMIT_MS = 300L;
+        public static final long IDLE_LIMIT_MS = 100L;
         private final IntComputer[] cpus;
+        private Control spy;
 
         // Make sure NAT package values are not changed while being used.
         private final ReentrantLock valLock = new ReentrantLock();
-        private Long lastSentY;
         private Long x;
         private Long y;
 
-        public NAT(IntComputer[] cpus) {
+        public NAT(IntComputer[] cpus, Control spy) {
             this.cpus = cpus;
+            this.spy = spy;
         }
 
         public void accept(Long x, Long y) {
@@ -128,18 +143,16 @@ public final class Aoc23 {
             while (true) {
                 if (isNetworkIdle() && x != null && y != null) {
                     try {
-                        if (lastSentY != null && lastSentY.equals(y)) {
-                            System.out.println("Sent Y value twice: " + y);
-                        }
+                        spy.accept(y);
+                        if (!spy.shouldContinue()) { return; }
                         valLock.lock();
                         cpus[0].in().put(x);
                         cpus[0].in().put(y);
-                        lastSentY = y;
                         x = null;
                         y = null;
                         valLock.unlock();
                     } catch (Exception e) {
-                        System.err.println("Error while processing NAT" + e.getMessage());
+                        System.err.println("Error while processing NAT " + e.getMessage());
                         return;
                     }
                 }

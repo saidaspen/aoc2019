@@ -12,6 +12,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Solution to Advent of Code 2019 Day 21
+ * The original puzzle can be found here: https://adventofcode.com/2019/day/21
+ * */
 public final class Day21 implements Day {
 
     private final String input;
