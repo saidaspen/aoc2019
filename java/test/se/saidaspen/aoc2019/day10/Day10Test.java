@@ -12,7 +12,6 @@ import java.util.List;
 
 import org.junit.Test;
 import se.saidaspen.aoc2019.Point;
-import se.saidaspen.aoc2019.day9.Day9;
 
 public class Day10Test {
 
